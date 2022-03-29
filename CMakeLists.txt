@@ -7,4 +7,5 @@ include_directories(.)
 
 add_executable(OS_ex2
         Demo/demo_itimer.c
-        uthreads.h)
+        #uthreads.h uthreads.cpp
+        )
