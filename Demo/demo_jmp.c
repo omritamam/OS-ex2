@@ -57,6 +57,9 @@ address_t translate_address(address_t addr)
 #define SECOND 1000000
 #define STACK_SIZE 4096
 
+
+struct itimerval timer;
+
 typedef void (*thread_entry_point)(void);
 
 char stack0[STACK_SIZE];
@@ -68,7 +71,7 @@ int current_thread = -1;
 void jump_to_thread(int tid)
 {
     current_thread = tid;
-    siglongjmp(env[tid], 1);
+    siglongjmp(env[tid], 5);
 }
 
 /**
@@ -85,6 +88,21 @@ void yield(void)
         jump_to_thread(1 - current_thread);
     }
 }
+void switch_handler(int sig)
+{
+    printf("inside switch_handler");
+    int ret_val = sigsetjmp(env[current_thread], 1);
+//     (env[tid]->__jmpbuf)[JB_PC] = translate_address(?????);
+
+    bool did_just_save_bookmark = ret_val == 0;
+    //    bool did_jump_from_another_thread = ret_val != 0;
+    if (did_just_save_bookmark)
+    {
+        jump_to_thread(1 - current_thread);
+    }
+
+}
+
 
 
 void thread0(void)
@@ -94,13 +112,12 @@ void thread0(void)
     {
         ++i;
         printf("in thread0 (%d)\n", i);
-        if (i % 3 == 0)
-        {
-            printf("thread0: yielding\n");
-            yield();
-        }
+//        struct itimerval new_timer;
+//        getitimer(ITIMER_VIRTUAL,&new_timer);
+//        printf("time in timer %ld\n", new_timer.it_value.tv_sec);
         usleep(SECOND);
     }
+
 }
 
 
@@ -111,11 +128,6 @@ void thread1(void)
     {
         ++i;
         printf("in thread1 (%d)\n", i);
-        if (i % 5 == 0)
-        {
-            printf("thread1: yielding\n");
-            yield();
-        }
         usleep(SECOND);
     }
 }
@@ -145,6 +157,26 @@ void setup(void)
 int main(void)
 {
     setup();
+    struct sigaction sa = {0};
+
+    // Install timer_handler as the signal handler for SIGVTALRM.
+    sa.sa_handler = &switch_handler;
+    if (sigaction(SIGVTALRM, &sa, NULL) < 0)
+    {
+        printf("sigaction error.");
+    }
+
+    // configure the timer to expire every 5 sec after that.
+    timer.it_interval.tv_sec = 3;    // following time intervals, seconds part
+    timer.it_interval.tv_usec = 0;    // following time intervals, microseconds part
+
+    // Start a virtual timer. It counts down whenever this process is executing.
+    if (setitimer(ITIMER_VIRTUAL, &timer, NULL))
+    {
+        printf("setitimer error.");
+    }
+
+
     jump_to_thread(0);
     return 0;
 }
