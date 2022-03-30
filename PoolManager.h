@@ -4,9 +4,6 @@
 #include "Location.cpp"
 #include <vector>
 #include "Thread.h"
-
-#ifndef OS_EX2_POOLMANAGER_H
-#define OS_EX2_POOLMANAGER_H
 class PoolManager {
     //fields:
 private:
@@ -22,4 +19,4 @@ public:
     Thread nextAvailableReady();
     int GetId();
 
-};#endif
+};
