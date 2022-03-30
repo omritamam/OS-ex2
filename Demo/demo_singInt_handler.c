@@ -31,5 +31,6 @@ int main(void)
     {
         pause(); // wait until receiving a signal
     }
+
     return 0;
 }

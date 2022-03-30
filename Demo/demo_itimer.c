@@ -36,7 +36,7 @@ int main(void)
     timer.it_value.tv_usec = 0;        // first time interval, microseconds part
 
     // configure the timer to expire every 3 sec after that.
-    timer.it_interval.tv_sec = 3;    // following time intervals, seconds part
+    timer.it_interval.tv_sec = 5;    // following time intervals, seconds part
     timer.it_interval.tv_usec = 0;    // following time intervals, microseconds part
 
     // Start a virtual timer. It counts down whenever this process is executing.
@@ -47,9 +47,14 @@ int main(void)
 
     for (;;)
     {
+        struct itimerval new_timer;
+        getitimer(ITIMER_VIRTUAL,&new_timer);
+        printf("time in timer %ld\n", new_timer.it_value.tv_sec);
+
         if (gotit)
         {
             printf("Got it!\n");
+
             gotit = 0;
         }
     }
