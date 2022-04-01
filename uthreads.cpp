@@ -13,14 +13,9 @@ int uthread_spawn(thread_entry_point entry_point){
 
 }
 
-// check if it terminates itself -
-// yes - pool.moveToDelete + starter.start
-// no - pool.moveToDelete
 int uthread_terminate(int tid){
 
 }
-
-
 
 int uthread_block(int tid){
 
