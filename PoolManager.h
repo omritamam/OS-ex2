@@ -18,7 +18,7 @@ class PoolManager {
   //fields:
  private:
   std::set<int> blockedID;
-  std::map<int, Thread> allThreads;
+  std::map<int, Thread*> allThreads;
   std::queue<int> IDQueue;
   int counter;
   Thread *curRunning;
@@ -40,11 +40,11 @@ class PoolManager {
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
     sigsetjmp(newTread->env, 1);
-    (newTread->env->__jmpbuf)[JB_SP] = translate_address (sp);
-    (newTread->env->__jmpbuf)[JB_PC] = translate_address (pc);
+    ((newTread->env)->__jmpbuf)[JB_SP] = translate_address (sp);
+    ((newTread->env)->__jmpbuf)[JB_PC] = translate_address (pc);
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
-    allThreads.insert (std::pair<int, *Thread> (newTread->id, newTread));
+    allThreads.insert (std::pair<int, Thread*> (newTread->id, newTread));
   }
 
   Thread *nextAvailableReady ()
