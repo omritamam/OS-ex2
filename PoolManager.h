@@ -1,7 +1,4 @@
-//
-// Created by shirayarhi on 30/03/2022.
-//
-#include "Location.cpp"
+
 #include "Thread.h"
 #include <vector>
 #include <set>
@@ -13,6 +10,7 @@
 typedef unsigned long address_t;
 #define JB_SP 6
 #define JB_PC 7
+using namespace std;
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
@@ -62,19 +60,22 @@ class PoolManager {
 
   //fields:
  private:
-  std::set<int> blockedID;
-  std::map<int, Thread*> allThreads;
-  std::queue<int> IDQueue;
+  set<int> *blockedID;
+  std::map<int, Thread*> *allThreads;
+  std::queue<int> *IDQueue;
   int counter;
-  Thread *curRunning;
 
  public:
+    static Thread *curRunning;
 
   //Methods
   PoolManager ()
   {
     counter = 0;
     curRunning = nullptr;
+    blockedID = new set<int>();
+    allThreads = new map<int, Thread*>();
+    IDQueue = new queue<int>();
   }
 
   void addThread (char *stack, thread_entry_point entry_point)
@@ -89,19 +90,19 @@ class PoolManager {
     ((newTread->env)->__jmpbuf)[JB_PC] = translate_address (pc);
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
-    allThreads.insert (std::pair<int, Thread*> (newTread->id, newTread));
+    allThreads->insert (pair<int, Thread*> (newTread->id, newTread));
   }
 
   Thread *nextAvailableReady ()
   {
-    int candidateId = IDQueue.front ();
-    IDQueue.pop ();
+    int candidateId = IDQueue->front ();
+    (*IDQueue).pop();
     Thread *candidate = getThreadById (candidateId);
     while ((candidate->status != READY) || (candidate->duplicate != 1))
       {
         if (candidate->status == TERMINATED)
           {
-            allThreads.erase (candidateId);
+            allThreads->erase(candidateId);
           }
         if (candidate->status == BLOCKED)
           {
@@ -111,10 +112,10 @@ class PoolManager {
     return candidate;
   }
 
-  Thread *getThreadById (int id)
+  Thread *getThreadById(int id)
   {
-    auto res = allThreads.find (id);
-    if (res != allThreads.end ())
+    auto res = (*allThreads).find(id);
+    if (res != (*allThreads).end())
       {
         return res->second;
       }
@@ -127,16 +128,16 @@ class PoolManager {
   int blockThread (int tid)
   {
     getThreadById (tid)->status = BLOCKED;
-    blockedID.insert (tid);
+    blockedID->insert(tid);
   }
 
   int resumeThread (int tid)
   {
-    auto res = blockedID.find (tid);
-    if (res != blockedID.end ())
+    auto res = blockedID->find (tid);
+    if (res != blockedID->end ())
       {
-        blockedID.erase (tid);
-        IDQueue.push (tid);
+        blockedID->erase (tid);
+        IDQueue->push (tid);
         Thread *curThread = getThreadById (tid);
         curThread->status = READY;
         curThread->duplicate++;
@@ -156,8 +157,11 @@ class PoolManager {
   }
 
   void setRunning(int tid){
-    Thread *curThread = getThreadById (tid);
+    Thread *curThread = getThreadById(tid);
     curThread->status = RUNNING;
     curRunning = curThread;
   }
 };
+
+
+

@@ -7,11 +7,6 @@ include_directories(.)
 
 add_executable(OS_ex2
 #        Demo/demo_jmp.c
-        Demo/demo_itimer.c
-        Thread.h
-        Terminator.h
-        Timer.h
-        Starter.h
+#        Demo/demo_itimer.c
         uthreads.cpp
-        Thread.cpp Location.cpp Starter.cpp
         )
