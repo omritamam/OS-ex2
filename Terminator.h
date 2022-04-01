@@ -6,13 +6,13 @@
 class Terminator{
 
     private:
-        PoolManager pool;
-        Starter start;
+        PoolManager *pool;
+        Starter *start;
 
     public:
     Terminator(PoolManager pool, Starter start);
 
 };
-
+}
 
 #endif
