@@ -9,10 +9,9 @@ add_executable(OS_ex2
 #        Demo/demo_jmp.c
         Demo/demo_itimer.c
         Thread.h
-        PoolManager.h
         Terminator.h
         Timer.h
         Starter.h
-        uthreads.h uthreads.cpp
+        uthreads.cpp
         Thread.cpp Location.cpp Starter.cpp
         )

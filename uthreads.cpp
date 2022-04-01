@@ -1,7 +1,5 @@
-unsigned int MAX_THREAD_NUM = 3;
-unsigned int STACK_SIZE = 4096;
-PoolManager pool;
-Starter starter;
+#include "PoolManager.h"
+#include "Starter.h"
 
 static PoolManager* pool;
 static Starter* starter;
