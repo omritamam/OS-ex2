@@ -29,12 +29,12 @@ class PoolManager {
   PoolManager ()
   {
     counter = 0;
+    curRunning = nullptr;
   }
 
   void addThread (char *stack, thread_entry_point entry_point)
   {
-    Thread *newTread = new
-        Thread ();
+    Thread *newTread = new Thread ();
     newTread->id = counter;
     newTread->status = READY;
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
@@ -71,7 +71,7 @@ class PoolManager {
     auto res = allThreads.find (id);
     if (res != allThreads.end ())
       {
-        return &(res->second);
+        return res->second;
       }
     else
       {
@@ -110,4 +110,9 @@ class PoolManager {
     curThread->status = TERMINATED;
   }
 
+  void setRunning(int tid){
+    Thread *curThread = getThreadById (tid);
+    curThread->status = RUNNING;
+    curRunning = curThread;
+  }
 };
