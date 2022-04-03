@@ -9,12 +9,14 @@ class Starter {
   static PoolManager *pool;
 
  public:
+  static int totalQuantum;
   Starter (PoolManager *staticPool)
   {
     pool = staticPool;
+    totalQuantum = 1;
   };
 
-  static void stopThread (int sig)
+  static void switchThread (int sig)
   {
     int ret_val = sigsetjmp(pool->curRunning->env, 1);
     if (ret_val == RETURN_FROM_STARTER)
@@ -22,22 +24,18 @@ class Starter {
         unblock_signals ();
         return;
       }
-    else
-      {
-        printf ("stop the thread!!!");
-        fflush (stdout);
-        pool->preemptedThread();
-      }
-  }
-
-  void startThread ()
-  {
+    printf ("stop the thread!!!");
+    fflush (stdout);
+    pool->preemptedThread ();
     //should check if there is no next available?
     Thread *nextThread = pool->nextAvailableReady ();
     pool->setRunning (nextThread->id);
+    totalQuantum++;
+    pool->curRunning->quantum++;
     //TODO error
     siglongjmp(nextThread->env, RETURN_FROM_STARTER);
   }
+
 
 };
 #endif

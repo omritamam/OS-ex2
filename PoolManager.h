@@ -72,18 +72,32 @@ class PoolManager {
   //Methods
   PoolManager ()
   {
-    counter = 0;
+    counter = 1;
     curRunning = nullptr;
     blockedID = new set<int> ();
     allThreads = new map<int, Thread *> ();
     IDQueue = new queue<int> ();
   }
 
+  void initMainThread ()
+  {
+    Thread *newTread = new Thread ();
+    newTread->stackPointer = new char(1);
+    newTread->id = MAIN_THREAD_TID;
+    newTread->status = READY;
+
+    sigsetjmp(newTread->env, 1);
+    sigemptyset (&(newTread->env)->__saved_mask);
+    allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
+  }
+
   void addThread (char *stack, thread_entry_point entry_point)
   {
     Thread *newTread = new Thread ();
+    newTread->stackPointer = stack;
     newTread->id = counter;
     newTread->status = READY;
+
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
     sigsetjmp(newTread->env, 1);
@@ -94,16 +108,17 @@ class PoolManager {
     allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
   }
 
-  void finalTerminate (Thread *candidate)
+  void finalTerminate (Thread *thread)
   {
-    if (candidate->duplicate == 1)
+    if (thread->duplicate == 1)
       {
-        allThreads->erase (candidate->id);
-        delete candidate;
+        allThreads->erase (thread->id);
+        delete thread->stackPointer;
+        delete thread;
       }
     else
       {
-        candidate->duplicate--;
+        thread->duplicate--;
       }
   }
 
@@ -149,10 +164,10 @@ class PoolManager {
     blockedID->insert (tid);
   }
 
-  void preemptedThread()
+  void preemptedThread ()
   {
     curRunning->status = READY;
-    IDQueue->push(curRunning->id);
+    IDQueue->push (curRunning->id);
     curRunning->duplicate++;
   }
 
@@ -168,39 +183,35 @@ class PoolManager {
         curThread->duplicate++;
         return 0;
       }
-      //Thread not blocked
+      //Thread not exist
     else
       {
-        return -1;
+        return 1;
       }
-  }
-
-  void clearQueue (queue<int> &curr)
-  {
-    queue<int> empty;
-    swap (curr, empty);
   }
 
   void terminateProcess ()
   {
-    //its required?
+    for (const auto &kv : *allThreads)
+      {
+        delete kv.second->stackPointer;
+        delete kv.second;
+      }
     allThreads->clear ();
-    blockedID->clear ();
-    clearQueue (*IDQueue);
 
     delete allThreads;
     delete blockedID;
     delete IDQueue;
   }
 
-  void terminateThread (int tid)
+  int terminateThread (int tid)
   {
-    if (tid == MAIN_THREAD_TID)
-      {
-        terminateProcess ();
-      }
     Thread *curThread = getThreadById (tid);
+    if(curThread == nullptr){
+      return -1;
+    }
     curThread->status = TERMINATED;
+    return 0;
   }
 
   void setRunning (int tid)
