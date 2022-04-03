@@ -3,16 +3,41 @@
 #define OS_EX2_STARTER_H
 int RETURN_FROM_STARTER = 5;
 
-class Starter{
+class Starter {
 
-private:
+ private:
+  static PoolManager *pool;
 
-public:
-    Starter(){
-};
+ public:
+  Starter (PoolManager *staticPool)
+  {
+    pool = staticPool;
+  };
 
-int Start() {
-    return 0;
-}
+  static void stopThread (int sig)
+  {
+    int ret_val = sigsetjmp(pool->curRunning->env, 1);
+    if (ret_val == RETURN_FROM_STARTER)
+      {
+        unblock_signals ();
+        return;
+      }
+    else
+      {
+        printf ("stop the thread!!!");
+        fflush (stdout);
+        pool->preemptedThread();
+      }
+  }
+
+  void startThread ()
+  {
+    //should check if there is no next available?
+    Thread *nextThread = pool->nextAvailableReady ();
+    pool->setRunning (nextThread->id);
+    //TODO error
+    siglongjmp(nextThread->env, RETURN_FROM_STARTER);
+  }
+
 };
 #endif

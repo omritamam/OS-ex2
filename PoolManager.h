@@ -14,14 +14,14 @@ using namespace std;
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-address_t translate_address(address_t addr)
+address_t translate_address (address_t addr)
 {
-    address_t ret;
-    asm volatile("xor    %%fs:0x30,%0\n"
-                 "rol    $0x11,%0\n"
-                 : "=g" (ret)
-                 : "0" (addr));
-    return ret;
+  address_t ret;
+  asm volatile("xor    %%fs:0x30,%0\n"
+               "rol    $0x11,%0\n"
+  : "=g" (ret)
+  : "0" (addr));
+  return ret;
 }
 
 #else
@@ -49,33 +49,34 @@ address_t translate_address(address_t addr)
 #define MAX_THREAD_NUM 100 /* maximal number of threads */
 #define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
-typedef void (*thread_entry_point)(void);
+typedef void (*thread_entry_point) (void);
 
 #define READY 1
 #define RUNNING 2
 #define BLOCKED 3
 #define TERMINATED 4
+#define MAIN_THREAD_TID 0
 
 class PoolManager {
 
   //fields:
  private:
   set<int> *blockedID;
-  std::map<int, Thread*> *allThreads;
+  std::map<int, Thread *> *allThreads;
   std::queue<int> *IDQueue;
   int counter;
 
  public:
-    static Thread *curRunning;
+  static Thread *curRunning;
 
   //Methods
   PoolManager ()
   {
     counter = 0;
     curRunning = nullptr;
-    blockedID = new set<int>();
-    allThreads = new map<int, Thread*>();
-    IDQueue = new queue<int>();
+    blockedID = new set<int> ();
+    allThreads = new map<int, Thread *> ();
+    IDQueue = new queue<int> ();
   }
 
   void addThread (char *stack, thread_entry_point entry_point)
@@ -90,32 +91,49 @@ class PoolManager {
     ((newTread->env)->__jmpbuf)[JB_PC] = translate_address (pc);
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
-    allThreads->insert (pair<int, Thread*> (newTread->id, newTread));
+    allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
+  }
+
+  void finalTerminate (Thread *candidate)
+  {
+    if (candidate->duplicate == 1)
+      {
+        allThreads->erase (candidate->id);
+        delete candidate;
+      }
+    else
+      {
+        candidate->duplicate--;
+      }
   }
 
   Thread *nextAvailableReady ()
   {
     int candidateId = IDQueue->front ();
-    (*IDQueue).pop();
+    (*IDQueue).pop ();
     Thread *candidate = getThreadById (candidateId);
+    candidate->duplicate--;//TODO לוודא שקורה פעם אחת וזהו
     while ((candidate->status != READY) || (candidate->duplicate != 1))
       {
         if (candidate->status == TERMINATED)
           {
-            allThreads->erase(candidateId);
+            finalTerminate (candidate);
           }
-        if (candidate->status == BLOCKED)
+        if ((candidate->status == BLOCKED) || (candidate->status == READY))
           {
-            candidate->duplicate--; // מעיפים את התרד שעשו לו בלוק
+            candidate->duplicate--;
           }
+        candidateId = IDQueue->front ();
+        (*IDQueue).pop ();
+        candidate = getThreadById (candidateId);
       }
     return candidate;
   }
 
-  Thread *getThreadById(int id)
+  Thread *getThreadById (int id)
   {
-    auto res = (*allThreads).find(id);
-    if (res != (*allThreads).end())
+    auto res = (*allThreads).find (id);
+    if (res != (*allThreads).end ())
       {
         return res->second;
       }
@@ -128,7 +146,14 @@ class PoolManager {
   int blockThread (int tid)
   {
     getThreadById (tid)->status = BLOCKED;
-    blockedID->insert(tid);
+    blockedID->insert (tid);
+  }
+
+  void preemptedThread()
+  {
+    curRunning->status = READY;
+    IDQueue->push(curRunning->id);
+    curRunning->duplicate++;
   }
 
   int resumeThread (int tid)
@@ -150,18 +175,42 @@ class PoolManager {
       }
   }
 
+  void clearQueue (queue<int> &curr)
+  {
+    queue<int> empty;
+    swap (curr, empty);
+  }
+
+  void terminateProcess ()
+  {
+    //its required?
+    allThreads->clear ();
+    blockedID->clear ();
+    clearQueue (*IDQueue);
+
+    delete allThreads;
+    delete blockedID;
+    delete IDQueue;
+  }
+
   void terminateThread (int tid)
   {
+    if (tid == MAIN_THREAD_TID)
+      {
+        terminateProcess ();
+      }
     Thread *curThread = getThreadById (tid);
     curThread->status = TERMINATED;
   }
 
-  void setRunning(int tid){
-    Thread *curThread = getThreadById(tid);
+  void setRunning (int tid)
+  {
+    Thread *curThread = getThreadById (tid);
     curThread->status = RUNNING;
     curRunning = curThread;
   }
 };
+
 
 
 

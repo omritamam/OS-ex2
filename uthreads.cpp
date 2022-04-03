@@ -7,7 +7,7 @@ static Timer* timer;
 
 int uthread_init2(int quantum_usecs){
     pool =  new PoolManager();
-    starter = new Starter();
+    starter = new Starter(pool);
     timer = new Timer(quantum_usecs);
 
 

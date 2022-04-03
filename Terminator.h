@@ -13,6 +13,7 @@ class Terminator{
         fflush(stdout);
         int ret_val = sigsetjmp(PoolManager::curRunning->env,1);
         if (ret_val == RETURN_FROM_STARTER) {
+          //TODO - maybe set running here?
             unblock_signals();
             return;
         }
