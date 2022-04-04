@@ -25,7 +25,8 @@ int uthread_spawn (thread_entry_point entry_point)
 
 int uthread_init (int quantum_usecs)
 {
-  starter = new Starter(pool);
+  starter = new Starter();
+  starter->init(pool);
   timer = new Timer(quantum_usecs);
   pool = new PoolManager(timer);
 

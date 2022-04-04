@@ -178,12 +178,7 @@ class PoolManager {
     return 0;
   }
 
-  void setRunning (int tid)
-  {
-    Thread *curThread = getThreadById (tid);
-    curThread->status = RUNNING;
-    curRunning = curThread;
-  }
+  void setRunning (int tid);
   unsigned long count(){
       return allThreads->size();
   }

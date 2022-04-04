@@ -9,4 +9,4 @@ add_executable(OS_ex2
 #        Demo/demo_jmp.c
 #        Demo/demo_itimer.c
         uthreads.cpp
-        Timer.cpp)
+        Timer.cpp Starter.cpp PoolManager.cpp)
