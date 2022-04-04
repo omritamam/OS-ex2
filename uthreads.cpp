@@ -7,8 +7,6 @@
 inline static PoolManager *pool;
 inline static Starter *starter;
 
-int SECOND = 6000000;
-
 
 // check if it terminates itself -
 // yes - pool.moveToDelete + starter.start
@@ -26,6 +24,7 @@ int uthread_terminate (int tid)
     }
     if (pool->terminateThread (tid))
     {
+
         return -1;
     }
     if (PoolManager::curRunning->id == tid)
@@ -37,8 +36,6 @@ int uthread_terminate (int tid)
 
 int uthread_block(int tid)
 {
-    Starter::mask_signals(true);
-
     if (tid == MAIN_THREAD_TID)
     {
         return 1;
@@ -49,6 +46,7 @@ int uthread_block(int tid)
         pool->terminateThread(tid);
         starter->switchThread (0);
     }
+
 }
 
 // if already running - fails, else - pool.move(block, ready)
