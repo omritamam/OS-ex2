@@ -1,3 +1,4 @@
+#include <armadillo>
 #include "Starter.h"
 int RETURN_FROM_STARTER = 5;
 
@@ -7,14 +8,18 @@ int Starter::init(PoolManager *staticPool) {
 }
 
 void Starter::switchThread(int sig) {
-    int ret_val = sigsetjmp(Starter::pool->curRunning->env, 1);
+    mask_signals(true);
+    write(1,"end thread\n",11);
+    int ret_val = setjmp(Starter::pool->curRunning->env);
     if (ret_val == RETURN_FROM_STARTER)
     {
-        //unblock_signals ();
+        write(1,"start thread\n",13);
+        mask_signals(false);
         return;
     }
-    printf ("stop the thread!!!");
-    fflush (stdout);
+    if(PoolManager::curRunning->status == TERMINATED){
+        pool->finalTerminate(PoolManager::curRunning);
+    }
     Starter::pool->preemptedThread();
     //should check if there is no next available?
     Thread *nextThread = Starter::pool->nextAvailableReady ();

@@ -9,6 +9,8 @@
 #include <map>
 #include <queue>
 #include <csignal>
+#include <assert.h>
+
 
 #define READY 1
 #define RUNNING 2
@@ -26,9 +28,9 @@ class PoolManager {
 
   //fields:
  private:
-  set<int> *blockedID;
+    set<Thread *> *blockedID;
   std::map<int, Thread *> *allThreads;
-  std::queue<int> *IDQueue;
+  std::queue<Thread *> *IDQueue;
   int counter;
 
 
@@ -41,20 +43,23 @@ class PoolManager {
   {
     counter = 1;
     curRunning = nullptr;
-    blockedID = new set<int> ();
+    blockedID = new set<Thread *> ();
     allThreads = new map<int, Thread *> ();
-    IDQueue = new queue<int> ();
+    IDQueue = new queue< Thread *> ();
   }
 
   void initMainThread ()
   {
-      Thread *newTread = new Thread ();
-      newTread->stackPointer = new char(1);
-      newTread->id = MAIN_THREAD_TID;
-      newTread->status = READY;
-      sigsetjmp(newTread->env, 1);
-      sigemptyset (&(newTread->env)->__saved_mask);
-      allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
+      Thread *mainThread = new Thread ();
+      mainThread->stackPointer = new char(1);
+      mainThread->id = MAIN_THREAD_TID;
+      mainThread->status = READY;
+      mainThread->duplicate = 0;
+      sigemptyset (&(mainThread->env)->__saved_mask);
+      allThreads->insert (pair<int, Thread *> (mainThread->id, mainThread));
+      curRunning = mainThread;
+      sigsetjmp(mainThread->env, 1);
+
   }
 
   void addThread (char *stack, thread_entry_point entry_point)
@@ -63,7 +68,6 @@ class PoolManager {
     newTread->stackPointer = stack;
     newTread->id = counter;
     newTread->status = READY;
-
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
     sigsetjmp(newTread->env, 1);
@@ -72,11 +76,13 @@ class PoolManager {
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
     allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
+    IDQueue->push(newTread);
+    newTread->duplicate=1;
   }
 
   void finalTerminate (Thread *thread)
   {
-    if (thread->duplicate == 1)
+    if (thread->duplicate <= 1 || thread->status == TERMINATED)
       {
         allThreads->erase (thread->id);
         delete thread->stackPointer;
@@ -90,23 +96,18 @@ class PoolManager {
 
   Thread *nextAvailableReady ()
   {
-    int candidateId = IDQueue->front ();
-    (*IDQueue).pop ();
-    Thread *candidate = getThreadById (candidateId);
-    candidate->duplicate--;//TODO לוודא שקורה פעם אחת וזהו
-    while ((candidate->status != READY) || (candidate->duplicate != 1))
+    Thread *candidate = IDQueue->front();
+    IDQueue->pop();
+      assert(NULL != candidate);
+    candidate->duplicate--;
+    while ((candidate->status != READY) || (candidate->duplicate > 0))
       {
         if (candidate->status == TERMINATED)
           {
             finalTerminate (candidate);
           }
-        if ((candidate->status == BLOCKED) || (candidate->status == READY))
-          {
-            candidate->duplicate--;
-          }
-        candidateId = IDQueue->front ();
-        (*IDQueue).pop ();
-        candidate = getThreadById (candidateId);
+        candidate = IDQueue->front ();
+        IDQueue->pop();
       }
     return candidate;
   }
@@ -126,35 +127,34 @@ class PoolManager {
 
   int blockThread (int tid)
   {
-    getThreadById (tid)->status = BLOCKED;
-    auto ret = blockedID->insert (tid);
+     Thread* thread = getThreadById (tid);
+     thread->status = BLOCKED;
+     auto ret = blockedID->insert (thread);
     return ret.second;
   }
 
   void preemptedThread ()
   {
     curRunning->status = READY;
-    IDQueue->push (curRunning->id);
+    IDQueue->push(curRunning);
     curRunning->duplicate++;
   }
 
   int resumeThread (int tid)
   {
-    auto res = blockedID->find (tid);
-    if (res != blockedID->end ())
+      Thread* thread = getThreadById(tid);
+      auto res = blockedID->find (thread);
+      if (res != blockedID->end())
       {
-        blockedID->erase (tid);
-        IDQueue->push (tid);
-        Thread *curThread = getThreadById (tid);
-        curThread->status = READY;
-        curThread->duplicate++;
+          blockedID->erase (thread);
+        IDQueue->push (thread);
+          thread->status = READY;
+        thread->duplicate++;
         return 0;
       }
       //Thread not exist
-    else
-      {
-        return 1;
-      }
+      return 1;
+
   }
 
   void terminateProcess ()

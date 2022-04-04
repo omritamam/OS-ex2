@@ -14,4 +14,5 @@ add_executable(OS_ex2
         PoolManager.h
         Starter.h
         uthreads.cpp
-        Timer.cpp Starter.cpp PoolManager.cpp Utils.cpp Utils.h)
+        main.cpp
+        Starter.cpp PoolManager.cpp)

@@ -12,7 +12,7 @@ class Starter {
  private:
     inline static PoolManager *pool;
     int quantum_usecs;
-    sigset_t sig_set = {{0}};
+    inline static sigset_t sig_set = {{0}};
  public:
     inline static int totalQuantum;
     int init(PoolManager *staticPool);
@@ -51,7 +51,7 @@ class Starter {
         }
         return 0;
     }
-     void mask_signals(bool mask){
+    static void mask_signals(bool mask){
         if(mask){
             if(sigprocmask(SIG_BLOCK, &sig_set, nullptr) == -1){
                 //print sigerr
