@@ -8,5 +8,9 @@ include_directories(.)
 add_executable(OS_ex2
 #        Demo/demo_jmp.c
 #        Demo/demo_itimer.c
+        PoolManager.h
+        Starter.h
+        Thread.h
+        Timer.h
         uthreads.cpp
-        Timer.cpp Starter.cpp PoolManager.cpp)
+        Timer.cpp Starter.cpp PoolManager.cpp Utils.cpp Utils.h)

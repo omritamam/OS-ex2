@@ -16,6 +16,8 @@
 #define BLOCKED 3
 #define TERMINATED 4
 #define MAIN_THREAD_TID 0
+//typedef void (*thread_entry_point) (void);
+
 using namespace std;
 
 class PoolManager {

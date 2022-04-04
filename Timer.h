@@ -1,11 +1,12 @@
-#include <sys/time.h>
-#include <signal.h>
-#include "Starter.h"
+
 
 #define USEC_IN_SEC 1000000
 
 #ifndef _TIMER_H
 #define _TIMER_H
+#include <sys/time.h>
+#include <signal.h>
+#include "Starter.h"
 
 class Timer{
 
@@ -21,17 +22,6 @@ public:
     }
     int Init();
 
-    void mask_signals(bool mask){
-        if(mask){
-            if(sigprocmask(SIG_BLOCK, &sig_set, nullptr) == -1){
-            //print sigerr
-            }
-        }
-        else{
-            if(sigprocmask(SIG_UNBLOCK, &sig_set, nullptr) == -1){
-                //print sigerr
-            }
-        }
-    }
+
 };
 #endif
