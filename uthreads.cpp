@@ -1,23 +1,33 @@
 #include <cstdlib>
+#include <cstdio>
+#include <armadillo>
+#include "uthreads.h"
+#include "Starter.h"
 #include "Timer.h"
+#include "PoolManager.h"
 
 static PoolManager *pool;
 static Starter *starter;
 static Timer *timer;
 
+int SECOND = 6000000;
+
 void initMainThread ();
 // equals to setup threads. tid comes from Pool, push to pool.ready
-int uthread_spawn2 (thread_entry_point entry_point)
+int uthread_spawn (thread_entry_point entry_point)
 {
-  char *stack = new char (STACK_SIZE);
+    if(pool->count()>=MAX_THREAD_NUM){
+        return 1;
+    }
+  char *stack = static_cast<char *>(malloc(STACK_SIZE));
   pool->addThread (stack, entry_point);
 }
 
-int uthread_init2 (int quantum_usecs)
+int uthread_init (int quantum_usecs)
 {
-  pool = new PoolManager ();
-  starter = new Starter (pool);
-  timer = new Timer (quantum_usecs);
+  starter = new Starter(pool);
+  timer = new Timer(quantum_usecs);
+  pool = new PoolManager(timer);
 
   if (quantum_usecs < 0)
     {
@@ -31,7 +41,7 @@ int uthread_init2 (int quantum_usecs)
 // check if it terminates itself -
 // yes - pool.moveToDelete + starter.start
 // no - pool.moveToDelete
-int uthread_terminate2 (int tid)
+int uthread_terminate (int tid)
 {
   if (tid == MAIN_THREAD_TID)
     { //main thread terminated
@@ -45,27 +55,27 @@ int uthread_terminate2 (int tid)
     {
       return -1;
     }
-  if (pool->curRunning->id == tid)
+  if (PoolManager::curRunning->id == tid)
     { //terminate himself
       starter->switchThread (0);
     }
 }
 
-int uthread_block2 (int tid)
+int uthread_block(int tid)
 {
   if (tid == MAIN_THREAD_TID)
     {
       return 1;
     }
   pool->blockThread(tid);
-  if (pool->curRunning->id == tid)
+  if (PoolManager::curRunning->id == tid)
     { //terminate himself
       starter->switchThread (0);
     }
 }
 
 // if already running - fails, else - pool.move(block, ready)
-int uthread_resume2 (int tid)
+int uthread_resume(int tid)
 {
   if(pool->resumeThread(tid)){
     //TODO- error
@@ -79,15 +89,15 @@ int uthread_resume2 (int tid)
  *
  * @return The ID of the calling thread.
 */
-int uthread_get_tid2(){
+int uthread_get_tid(){
   return pool->curRunning->id;
 }
 
-int uthread_get_total_quantums2(){
+int uthread_get_total_quantums(){
   return starter->totalQuantum;
 }
 
-int uthread_get_quantums2(int tid){
+int uthread_get_quantums(int tid){
   return pool->getThreadById(tid)->quantum;
 }
 
@@ -98,7 +108,7 @@ void thread0 (void)
   while (1)
     {
       ++i;
-      printf ("in thread0 (%d)\n", i);
+      printf ("in thread0 (%d)\n");
       usleep (SECOND);
     }
 }
@@ -111,15 +121,15 @@ void thread1 (void)
       ++i;
       printf ("in thread1 (%d)\n", i);
       usleep (SECOND);
-      uthread_terminate2(uthread_get_tid2());
+      uthread_terminate(uthread_get_tid());
     }
 }
 
 int main (void)
 {
-  uthread_init2 (2000000);
-//  uthread_spawn2 (thread0);
-  uthread_spawn2 (thread1);
+  uthread_init (2000000);
+//  uthread_spawn (thread0);
+  uthread_spawn (thread1);
 
 }
 
