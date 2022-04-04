@@ -12,6 +12,8 @@ class Thread {
   int status;
   sigjmp_buf env;
   int duplicate;
+  int quantum;
+  char* stackPointer;
 };
 
 

@@ -24,7 +24,7 @@ public:
         sigaddset (&sig_set, SIGINT);
 
         // Install timer_handler as the signal handler for SIGVTALRM.
-        sa.sa_handler = &Terminator::terminate;
+        sa.sa_handler = &Starter::switchThread;
         if (sigaction(SIGVTALRM, &sa, NULL) < 0) {
             printf("seg error\n");
         }
