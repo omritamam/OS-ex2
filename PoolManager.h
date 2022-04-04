@@ -2,9 +2,8 @@
 #ifndef OS_EX2_POOLMANAGER_H
 #define OS_EX2_POOLMANAGER_H
 
-#include "Thread.h"
 #include "uthreads.h"
-#include "Timer.h"
+#include "Thread.h"
 #include <vector>
 #include <set>
 #include <map>
@@ -16,7 +15,10 @@
 #define BLOCKED 3
 #define TERMINATED 4
 #define MAIN_THREAD_TID 0
-//typedef void (*thread_entry_point) (void);
+
+/* External interface */
+#define MAX_THREAD_NUM 100 /* maximal number of threads */
+#define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
 using namespace std;
 
@@ -28,21 +30,20 @@ class PoolManager {
   std::map<int, Thread *> *allThreads;
   std::queue<int> *IDQueue;
   int counter;
-  static Timer *_timer;
 
 
  public:
-  static Thread *curRunning;
+    inline static Thread* curRunning;
+
 
   //Methods
-  PoolManager (Timer *timer)
+  PoolManager ()
   {
     counter = 1;
     curRunning = nullptr;
     blockedID = new set<int> ();
     allThreads = new map<int, Thread *> ();
     IDQueue = new queue<int> ();
-    _timer = timer;
   }
 
   void initMainThread ()

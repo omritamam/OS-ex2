@@ -1,6 +1,5 @@
-
-#ifndef _UTHREADS_H
-#define _UTHREADS_H
+#ifndef OS_EX2_UTHREADS_H
+#define OS_EX2_UTHREADS_H
 
 #ifdef __x86_64__
 typedef unsigned long address_t;
@@ -11,7 +10,7 @@ typedef void (*thread_entry_point) (void);
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-address_t translate_address (address_t addr)
+inline address_t translate_address (address_t addr)
 {
     address_t ret;
     asm volatile("xor    %%fs:0x30,%0\n"
@@ -44,9 +43,6 @@ address_t translate_address(address_t addr)
 
 #endif
 
-/* External interface */
-#define MAX_THREAD_NUM 100 /* maximal number of threads */
-#define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
 /**
  * @brief initializes the thread library.

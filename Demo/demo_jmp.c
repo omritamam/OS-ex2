@@ -21,7 +21,7 @@ typedef unsigned long address_t;
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-address_t translate_address(address_t addr)
+extern address_t translate_address(address_t addr)
 {
     address_t ret;
     asm volatile("xor    %%fs:0x30,%0\n"
@@ -41,7 +41,7 @@ typedef unsigned int address_t;
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-address_t translate_address(address_t addr)
+extern address_t translate_address(address_t addr)
 {
     address_t ret;
     asm volatile("xor    %%gs:0x18,%0\n"
@@ -54,7 +54,6 @@ address_t translate_address(address_t addr)
 
 #endif
 
-#define SECOND 1000000
 #define STACK_SIZE 4096
 
 
@@ -115,7 +114,7 @@ void thread0(void)
 //        struct itimerval new_timer;
 //        getitimer(ITIMER_VIRTUAL,&new_timer);
 //        printf("time in timer %ld\n", new_timer.it_value.tv_sec);
-        usleep(SECOND);
+        usleep(USEC_IN_SEC);
     }
 
 }
@@ -128,7 +127,7 @@ void thread1(void)
     {
         ++i;
         printf("in thread1 (%d)\n", i);
-        usleep(SECOND);
+        usleep(USEC_IN_SEC);
     }
 }
 

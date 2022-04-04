@@ -1,4 +1,5 @@
 #include "Starter.h"
+int RETURN_FROM_STARTER = 5;
 
 int Starter::init(PoolManager *staticPool) {
     pool = staticPool;
