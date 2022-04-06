@@ -17,6 +17,8 @@ void Starter::switchThread(int sig) {
         mask_signals(false);
         return;
     }
+    mask_signals(true);
+
     if(PoolManager::curRunning->status == TERMINATED){
         pool->finalTerminate(PoolManager::curRunning);
     }
