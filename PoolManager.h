@@ -59,7 +59,6 @@ class PoolManager {
       allThreads->insert (pair<int, Thread *> (mainThread->id, mainThread));
       curRunning = mainThread;
       sigsetjmp(mainThread->env, 1);
-
   }
 
   void addThread (char *stack, thread_entry_point entry_point)
@@ -75,7 +74,7 @@ class PoolManager {
     ((newTread->env)->__jmpbuf)[JB_PC] = translate_address (pc);
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
-    allThreads->insert (pair<int, Thread *> (newTread->id, newTread));
+    allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
     IDQueue->push(newTread);
     newTread->duplicate=1;
   }
@@ -98,7 +97,6 @@ class PoolManager {
   {
     Thread *candidate = IDQueue->front();
     IDQueue->pop();
-      assert(NULL != candidate);
     candidate->duplicate--;
     while ((candidate->status != READY) || (candidate->duplicate > 0))
       {
@@ -129,7 +127,7 @@ class PoolManager {
   {
      Thread* thread = getThreadById (tid);
      thread->status = BLOCKED;
-     auto ret = blockedID->insert (thread);
+     auto ret = blockedID->insert(thread);
     return ret.second;
   }
 
@@ -147,7 +145,7 @@ class PoolManager {
       if (res != blockedID->end())
       {
           blockedID->erase (thread);
-        IDQueue->push (thread);
+          IDQueue->push (thread);
           thread->status = READY;
         thread->duplicate++;
         return 0;
@@ -181,7 +179,12 @@ class PoolManager {
     return 0;
   }
 
-  void setRunning (int tid);
+  void setRunning (Thread * thread){
+    thread->status = RUNNING;
+    PoolManager::curRunning = thread;
+  }
+
+
   unsigned long count(){
       return allThreads->size();
   }

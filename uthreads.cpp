@@ -14,7 +14,9 @@ inline static Starter *starter;
 int uthread_terminate (int tid)
 {
     Starter::mask_signals(true);
-    write(1,"terminated\n",11);
+    #pragma region debugging
+
+    #pragma endregion debugging
     if (tid == MAIN_THREAD_TID)
     { //main thread terminated
         pool->terminateProcess ();
@@ -40,12 +42,16 @@ int uthread_block(int tid)
     {
         return 1;
     }
+    Starter::mask_signals(true);
+
     pool->blockThread(tid);
     if (PoolManager::curRunning->id == tid)
     { //terminate himself
         pool->terminateThread(tid);
         starter->switchThread (0);
     }
+    Starter::mask_signals(false);
+
 
 }
 
@@ -91,8 +97,9 @@ int uthread_init (int quantum_usecs)
         printf ("input error invalid quantum usedcs");
         return -1;
     }
-    pool->initMainThread();
     starter->initTimer(quantum_usecs);
+    pool->initMainThread();
+    Starter::mask_signals(false);
 }
 
 // equals to setup threads. tid comes from Pool, push to pool.ready
@@ -102,7 +109,9 @@ int uthread_spawn (thread_entry_point entry_point)
         return 1;
     }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
-    pool->addThread (stack, entry_point);
+    Starter::mask_signals(true);
+    pool->addThread(stack, entry_point);
+    Starter::mask_signals(false);
 }
 
 int uthread_sleep(int num_quantums){

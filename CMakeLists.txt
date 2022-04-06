@@ -15,4 +15,4 @@ add_executable(OS_ex2
         Starter.h
         uthreads.cpp
         main.cpp
-        Starter.cpp PoolManager.cpp)
+        Starter.cpp)

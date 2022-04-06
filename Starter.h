@@ -21,11 +21,8 @@ class Starter {
         struct sigaction sa = {0};
         struct itimerval timer;
         totalQuantum = 1;
-
         sigemptyset(&sig_set);
         sigaddset (&sig_set, SIGINT);
-
-        // Install timer_handler as the signal handler for SIGVTALRM.
         sa.sa_handler = &Starter::switchThread;
         if (sigaction(SIGVTALRM, &sa, NULL) < 0) {
             printf("seg error\n");
@@ -45,6 +42,7 @@ class Starter {
 
 
         // Start a virtual timer. It counts down whenever this process is executing.
+        Starter::mask_signals(true);
         if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
             printf("set timer error\n");
             return -1;
@@ -63,5 +61,7 @@ class Starter {
             }
         }
     }
+
+    static void log(const char *prefix);
 };
 #endif
