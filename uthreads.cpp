@@ -1,77 +1,72 @@
 #include <cstdlib>
-#include "Timer.h"
+#include <cstdio>
+#include <armadillo>
+#include "PoolManager.h"
+#include "Starter.h"
 
-static PoolManager *pool;
-static Starter *starter;
-static Timer *timer;
+inline static PoolManager *pool;
+inline static Starter *starter;
 
-void initMainThread ();
-// equals to setup threads. tid comes from Pool, push to pool.ready
-int uthread_spawn2 (thread_entry_point entry_point)
-{
-  char *stack = new char (STACK_SIZE);
-  pool->addThread (stack, entry_point);
-}
-
-int uthread_init2 (int quantum_usecs)
-{
-  pool = new PoolManager ();
-  starter = new Starter (pool);
-  timer = new Timer (quantum_usecs);
-
-  if (quantum_usecs < 0)
-    {
-      printf ("input error invalid quantum usedcs");
-      return -1;
-    }
-    pool->initMainThread();
-//    timer->Init();
-}
 
 // check if it terminates itself -
 // yes - pool.moveToDelete + starter.start
 // no - pool.moveToDelete
-int uthread_terminate2 (int tid)
+int uthread_terminate (int tid)
 {
-  if (tid == MAIN_THREAD_TID)
+    Starter::mask_signals(true);
+    #pragma region debugging
+
+    #pragma endregion debugging
+    if (tid == MAIN_THREAD_TID)
     { //main thread terminated
-      pool->terminateProcess ();
-      delete starter;
-      delete pool;
-      delete timer;
-      exit(0);
+        pool->terminateProcess ();
+        delete starter;
+        delete pool;
+        exit(0);
     }
-  if (pool->terminateThread (tid))
+    if (pool->terminateThread (tid))
     {
-      return -1;
+
+        return -1;
     }
-  if (pool->curRunning->id == tid)
+    if (PoolManager::curRunning->id == tid)
     { //terminate himself
-      starter->switchThread (0);
+        PoolManager::curRunning->status= TERMINATED;
+        starter->switchThread (0);
     }
 }
 
-int uthread_block2 (int tid)
+int uthread_block(int tid)
 {
-  if (tid == MAIN_THREAD_TID)
+    if (tid == MAIN_THREAD_TID)
     {
-      return 1;
+        return 1;
     }
-  pool->blockThread(tid);
-  if (pool->curRunning->id == tid)
+    Starter::mask_signals(true);
+
+    pool->blockThread(tid);
+    if (PoolManager::curRunning->id == tid)
     { //terminate himself
-      starter->switchThread (0);
+        pool->terminateThread(tid);
+        starter->switchThread (0);
     }
+    Starter::mask_signals(false);
+
+
 }
 
 // if already running - fails, else - pool.move(block, ready)
-int uthread_resume2 (int tid)
+int uthread_resume(int tid)
 {
-  if(pool->resumeThread(tid)){
-    //TODO- error
-    return -1;
-  }
-  return 0;
+    Starter::mask_signals(true);
+
+    if(pool->resumeThread(tid)){
+        //TODO- error
+        return -1;
+    }
+    Starter::mask_signals(false);
+
+    return 0;
 };
 
 /**
@@ -79,48 +74,46 @@ int uthread_resume2 (int tid)
  *
  * @return The ID of the calling thread.
 */
-int uthread_get_tid2(){
-  return pool->curRunning->id;
+int uthread_get_tid(){
+    return pool->curRunning->id;
 }
 
-int uthread_get_total_quantums2(){
-  return starter->totalQuantum;
+int uthread_get_total_quantums(){
+    return starter->totalQuantum;
 }
 
-int uthread_get_quantums2(int tid){
-  return pool->getThreadById(tid)->quantum;
+int uthread_get_quantums(int tid){
+    return pool->getThreadById(tid)->quantum;
 }
 
-
-void thread0 (void)
+int uthread_init (int quantum_usecs)
 {
-  int i = 0;
-  while (1)
+    starter = new Starter();
+    pool = new PoolManager();
+    starter->init(pool);
+
+    if (quantum_usecs < 0)
     {
-      ++i;
-      printf ("in thread0 (%d)\n", i);
-      usleep (SECOND);
+        printf ("input error invalid quantum usedcs");
+        return -1;
     }
+    starter->initTimer(quantum_usecs);
+    pool->initMainThread();
+    Starter::mask_signals(false);
 }
 
-void thread1 (void)
+// equals to setup threads. tid comes from Pool, push to pool.ready
+int uthread_spawn (thread_entry_point entry_point)
 {
-  int i = 0;
-  while (1)
-    {
-      ++i;
-      printf ("in thread1 (%d)\n", i);
-      usleep (SECOND);
-      uthread_terminate2(uthread_get_tid2());
+    if(pool->count()>=MAX_THREAD_NUM){
+        return 1;
     }
+    char *stack = static_cast<char *>(malloc(STACK_SIZE));
+    Starter::mask_signals(true);
+    pool->addThread(stack, entry_point);
+    Starter::mask_signals(false);
 }
 
-int main (void)
-{
-  uthread_init2 (2000000);
-//  uthread_spawn2 (thread0);
-  uthread_spawn2 (thread1);
-
+int uthread_sleep(int num_quantums){
+    return 0;
 }
-
-
