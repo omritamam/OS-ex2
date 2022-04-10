@@ -9,22 +9,22 @@ int Starter::init(PoolManager *staticPool) {
 
 void Starter::switchThread(int sig) {
     mask_signals(true);
-    log("end thread ");
+//log("end thread ");
     int ret_val = setjmp(Starter::pool->curRunning->env);
     if (ret_val == RETURN_FROM_STARTER)
     {
-        log("start thread ");
+        //log("start thread ");
         mask_signals(false);
         return;
     }
-    mask_signals(true);
-
     if(PoolManager::curRunning->status == TERMINATED){
         pool->finalTerminate(PoolManager::curRunning);
     }
-    Starter::pool->preemptedThread();
+    if(PoolManager::curRunning->status == RUNNING){
+        Starter::pool->preemptedThread();
+    }
     //should check if there is no next available?
-    Thread *nextThread = Starter::pool->nextAvailableReady ();
+    Thread *nextThread = Starter::pool->nextAvailableReady();
     Starter::pool->setRunning(nextThread);
     Starter::totalQuantum++;
     PoolManager::curRunning->quantum++;

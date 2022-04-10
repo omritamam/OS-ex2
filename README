@@ -1,0 +1,23 @@
+shirayarhi, omri.tamam
+Shira Yarhi (318344637), Omri Tamam (315564112)
+EX: 2
+
+FILES:
+
+
+ANSWERS:
+
+Q1:
+
+Q2:
+
+Q3:
+
+Q4:
+
+Q5:
+The main goal of the sigsetjmp function is to save the environment of the running thread (and in particular the relevant
+location in the stack - SP, and the current location in the code - PC).
+The environment has been saved to the thread’s buffer.
+The siglongjmp function extracts the environment of the thread that we want to launch ( saved in the buffer) and jumps
+to the place that we call to sigsetjmp.

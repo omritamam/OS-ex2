@@ -382,7 +382,7 @@ int test_switch_4_threads(){
     uthread_terminate(0);
 }
 int func_switch_thread(){
-    for (int i =0;i<100000;++i){
+    for (int i =0;i<10000;++i){
         printf("switch thread\n");
     }//
     flag =1;
@@ -392,7 +392,7 @@ int func_switch_thread(){
 }
 /**
  * tests regular switch, between the main and another thread
- *in the main thread you have to see numbers between 1.....100000
+ * in the main thread you have to see numbers between 1.....100000
  * in thread 2 there is a switch thread print
  * @expected: alternating prints
  *
@@ -419,9 +419,9 @@ int test_switch_thread(){
 
 }
 int main(int argc ,char *argv[]){
-  //  test_switch_thread();
-    test_switch_4_threads();
-  //  test_regular_block_resume();
+    test_switch_thread();
+//    test_switch_4_threads();
+//    test_regular_block_resume();
 //    test_sleep();
 //    test_block_and_sleep();
 //    test_sleep_and_block();

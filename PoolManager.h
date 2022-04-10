@@ -28,20 +28,23 @@ class PoolManager {
 
   //fields:
  private:
-    set<Thread *> *blockedID;
-  std::map<int, Thread *> *allThreads;
-  std::queue<Thread *> *IDQueue;
-  int counter;
+//TODO return fields to private
 
 
  public:
     inline static Thread* curRunning;
-
+ set<Thread *> *blockedID;
+ std::map<int, Thread *> *allThreads;
+ std::queue<Thread *> *IDQueue;
+ int isUsed[MAX_THREAD_NUM] = {0};
+ int counter;
+ int countReady;
 
   //Methods
   PoolManager ()
   {
-    counter = 1;
+      countReady = 1; //should start from 1?
+//    counter = 1;
     curRunning = nullptr;
     blockedID = new set<Thread *> ();
     allThreads = new map<int, Thread *> ();
@@ -53,19 +56,30 @@ class PoolManager {
       Thread *mainThread = new Thread ();
       mainThread->stackPointer = new char(1);
       mainThread->id = MAIN_THREAD_TID;
-      mainThread->status = READY;
+      mainThread->status = RUNNING;
       mainThread->duplicate = 0;
+      isUsed[0] = 1;
+      mainThread->quantum = 1;
       sigemptyset (&(mainThread->env)->__saved_mask);
       allThreads->insert (pair<int, Thread *> (mainThread->id, mainThread));
       curRunning = mainThread;
       sigsetjmp(mainThread->env, 1);
   }
 
-  void addThread (char *stack, thread_entry_point entry_point)
+  int findId(){
+      for(int i = 1; i < MAX_THREAD_NUM; i++){
+          if(!(isUsed[i])){
+              return i;
+          }
+      }
+  }
+  
+  int addThread (char *stack, thread_entry_point entry_point)
   {
     Thread *newTread = new Thread ();
     newTread->stackPointer = stack;
-    newTread->id = counter;
+    newTread->id = findId();
+    isUsed[newTread->id] = 1;
     newTread->status = READY;
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
@@ -74,9 +88,11 @@ class PoolManager {
     ((newTread->env)->__jmpbuf)[JB_PC] = translate_address (pc);
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
+    countReady++;
     allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
     IDQueue->push(newTread);
     newTread->duplicate=1;
+    return newTread->id;
   }
 
   void finalTerminate (Thread *thread)
@@ -98,6 +114,9 @@ class PoolManager {
     Thread *candidate = IDQueue->front();
     IDQueue->pop();
     candidate->duplicate--;
+    if(candidate == NULL){
+
+    }
     while ((candidate->status != READY) || (candidate->duplicate > 0))
       {
         if (candidate->status == TERMINATED)
@@ -107,6 +126,9 @@ class PoolManager {
         candidate = IDQueue->front ();
         IDQueue->pop();
       }
+    if(candidate == nullptr){
+        return curRunning;
+    }
     return candidate;
   }
 
@@ -128,7 +150,7 @@ class PoolManager {
      Thread* thread = getThreadById (tid);
      thread->status = BLOCKED;
      auto ret = blockedID->insert(thread);
-    return ret.second;
+     return ret.second;
   }
 
   void preemptedThread ()
@@ -150,9 +172,7 @@ class PoolManager {
         thread->duplicate++;
         return 0;
       }
-      //Thread not exist
-      return 1;
-
+      return -1;
   }
 
   void terminateProcess ()
@@ -176,6 +196,8 @@ class PoolManager {
       return -1;
     }
     curThread->status = TERMINATED;
+    countReady--;
+    isUsed[tid] = 0;
     return 0;
   }
 
@@ -186,7 +208,8 @@ class PoolManager {
 
 
   unsigned long count(){
-      return allThreads->size();
+//      return allThreads->size();
+    return countReady;
   }
 };
 #endif
