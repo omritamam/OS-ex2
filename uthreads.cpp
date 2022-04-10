@@ -28,7 +28,7 @@ int checkValidTid(int tid){
 int uthread_terminate (int tid)
 {
 //    cout << "count before" <<pool->count()<<endl;
-    Starter::mask_signals(true);
+    Starter::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
@@ -54,7 +54,7 @@ int uthread_terminate (int tid)
 
 int uthread_block(int tid)
 {
-    Starter::mask_signals(true);
+    Starter::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
@@ -70,7 +70,7 @@ int uthread_block(int tid)
         starter->initTimer();
         starter->switchThread (0);
     }
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
 
 
     //print state
@@ -87,12 +87,12 @@ int uthread_block(int tid)
 // if already running - fails, else - pool.move(block, ready)
 int uthread_resume(int tid)
 {
-    Starter::mask_signals(true);
+    Starter::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
     pool->resumeThread(tid);
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
     return 0;
 };
 
@@ -129,7 +129,7 @@ int uthread_init (int quantum_usecs)
     }
     starter->initTimer(quantum_usecs);
     pool->initMainThread();
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
 }
 
 // equals to setup threads. tid comes from Pool, push to pool.ready
@@ -140,9 +140,9 @@ int uthread_spawn (thread_entry_point entry_point)
         return -1;
     }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
-    Starter::mask_signals(true);
+    Starter::mask_signals();
     int curId = pool->addThread(stack, entry_point);
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
     return curId;
 }
 

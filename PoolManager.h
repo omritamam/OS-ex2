@@ -111,24 +111,24 @@ class PoolManager {
 
   Thread *nextAvailableReady ()
   {
+      if(IDQueue->empty()){
+          return curRunning;
+      }
     Thread *candidate = IDQueue->front();
     IDQueue->pop();
     candidate->duplicate--;
-    if(candidate == NULL){
-
-    }
     while ((candidate->status != READY) || (candidate->duplicate > 0))
       {
         if (candidate->status == TERMINATED)
           {
             finalTerminate (candidate);
           }
+        if(IDQueue->empty()){
+            return curRunning;
+        }
         candidate = IDQueue->front ();
         IDQueue->pop();
       }
-    if(candidate == nullptr){
-        return curRunning;
-    }
     return candidate;
   }
 
@@ -169,7 +169,7 @@ class PoolManager {
           blockedID->erase (thread);
           IDQueue->push (thread);
           thread->status = READY;
-        thread->duplicate++;
+          thread->duplicate++;
         return 0;
       }
       return -1;

@@ -50,7 +50,7 @@ class Starter {
 
 
         // Start a virtual timer. It counts down whenever this process is executing.
-        Starter::mask_signals(true);
+        Starter::mask_signals();
         if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
             printf("set timer error\n");
             return -1;
@@ -58,18 +58,18 @@ class Starter {
         return 0;
     }
 
-    static void mask_signals(bool mask){
-        if(mask){
+    static void mask_signals(){
             if(sigprocmask(SIG_BLOCK, &sig_set, nullptr) == -1){
                 fprintf(stderr, "system error: mask signals fail\n");
             }
-        }
-        else{
-            if(sigprocmask(SIG_UNBLOCK, &sig_set, nullptr) == -1){
-                fprintf(stderr, "system error: mask signals fail\n");
-            }
+    }
+
+    static void unmask_signals(){
+        if(sigprocmask(SIG_UNBLOCK, &sig_set, nullptr) == -1){
+            fprintf(stderr, "system error: mask signals fail\n");
         }
     }
+
 
     static void log(const char *prefix);
 };

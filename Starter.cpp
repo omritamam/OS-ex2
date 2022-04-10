@@ -8,13 +8,13 @@ int Starter::init(PoolManager *staticPool) {
 }
 
 void Starter::switchThread(int sig) {
-    mask_signals(true);
+    mask_signals();
 //log("end thread ");
     int ret_val = setjmp(Starter::pool->curRunning->env);
     if (ret_val == RETURN_FROM_STARTER)
     {
         //log("start thread ");
-        mask_signals(false);
+        unmask_signals();
         return;
     }
     if(PoolManager::curRunning->status == TERMINATED){
@@ -28,9 +28,12 @@ void Starter::switchThread(int sig) {
     Starter::pool->setRunning(nextThread);
     Starter::totalQuantum++;
     PoolManager::curRunning->quantum++;
-    mask_signals(false);
+    if(PoolManager::curRunning->quantum > 7 && PoolManager::curRunning->id == 0){
+        fprintf(stderr, "gotya!");
+    }
     //TODO error
     siglongjmp(nextThread->env, RETURN_FROM_STARTER);
+
 }
 
 void Starter::log(const char *prefix) {
