@@ -8,29 +8,32 @@ int Starter::init(PoolManager *staticPool) {
 }
 
 void Starter::switchThread(int sig) {
-    mask_signals(true);
-    log("end thread ");
+    mask_signals();
+//log("end thread ");
     int ret_val = setjmp(Starter::pool->curRunning->env);
     if (ret_val == RETURN_FROM_STARTER)
     {
-        log("start thread ");
-        mask_signals(false);
+        //log("start thread ");
+        unmask_signals();
         return;
     }
-    mask_signals(true);
-
     if(PoolManager::curRunning->status == TERMINATED){
         pool->finalTerminate(PoolManager::curRunning);
     }
-    Starter::pool->preemptedThread();
+    if(PoolManager::curRunning->status == RUNNING){
+        Starter::pool->preemptedThread();
+    }
     //should check if there is no next available?
-    Thread *nextThread = Starter::pool->nextAvailableReady ();
+    Thread *nextThread = Starter::pool->nextAvailableReady();
     Starter::pool->setRunning(nextThread);
     Starter::totalQuantum++;
     PoolManager::curRunning->quantum++;
-    mask_signals(false);
+    if(PoolManager::curRunning->quantum > 7 && PoolManager::curRunning->id == 0){
+        fprintf(stderr, "gotya!");
+    }
     //TODO error
     siglongjmp(nextThread->env, RETURN_FROM_STARTER);
+
 }
 
 void Starter::log(const char *prefix) {

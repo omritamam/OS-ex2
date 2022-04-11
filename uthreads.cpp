@@ -6,17 +6,32 @@
 
 inline static PoolManager *pool;
 inline static Starter *starter;
+using namespace std;
 
+int checkValidTid(int tid){
+    if ( tid < 0 || tid > 99 )
+    {
+        fprintf(stderr, "thread library error: the thread id is invalid (it needs to be  between 0 to 99)\n");
+        return -1;
+    }
+    if ( pool->isUsed[tid]==0 )
+    {
+        fprintf(stderr, "thread library error: the thread id's cell is empty in the threadsArr\n");
+        return -1;
+    }
+    return 0;
+}
 
 // check if it terminates itself -
 // yes - pool.moveToDelete + starter.start
 // no - pool.moveToDelete
 int uthread_terminate (int tid)
 {
-    Starter::mask_signals(true);
-    #pragma region debugging
-
-    #pragma endregion debugging
+//    cout << "count before" <<pool->count()<<endl;
+    Starter::mask_signals();
+    if(checkValidTid(tid) == -1){
+        return -1;
+    }
     if (tid == MAIN_THREAD_TID)
     { //main thread terminated
         pool->terminateProcess ();
@@ -32,40 +47,52 @@ int uthread_terminate (int tid)
     if (PoolManager::curRunning->id == tid)
     { //terminate himself
         PoolManager::curRunning->status= TERMINATED;
+        starter->initTimer();
         starter->switchThread (0);
     }
 }
 
 int uthread_block(int tid)
 {
+    Starter::mask_signals();
+    if(checkValidTid(tid) == -1){
+        return -1;
+    }
     if (tid == MAIN_THREAD_TID)
     {
-        return 1;
+        fprintf(stderr, "thread library error: it's illegal to block the main thread\n");
+        return -1;
     }
-    Starter::mask_signals(true);
-
     pool->blockThread(tid);
+//    cout <<"try3" << endl;
     if (PoolManager::curRunning->id == tid)
     { //terminate himself
-        pool->terminateThread(tid);
+        starter->initTimer();
         starter->switchThread (0);
     }
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
 
 
+    //print state
+//    set<Thread*>::iterator itr;
+//    cout << "blocked IDs:"<<endl;
+//    for (itr = pool->blockedID->begin();
+//    itr != pool->blockedID->end(); itr++)
+//    {
+//        cout << *itr << " ";
+//    }
 }
+
 
 // if already running - fails, else - pool.move(block, ready)
 int uthread_resume(int tid)
 {
-    Starter::mask_signals(true);
-
-    if(pool->resumeThread(tid)){
-        //TODO- error
+    Starter::mask_signals();
+    if(checkValidTid(tid) == -1){
         return -1;
     }
-    Starter::mask_signals(false);
-
+    pool->resumeThread(tid);
+    Starter::unmask_signals();
     return 0;
 };
 
@@ -83,6 +110,9 @@ int uthread_get_total_quantums(){
 }
 
 int uthread_get_quantums(int tid){
+    if(checkValidTid(tid) == -1){
+        return -1;
+    }
     return pool->getThreadById(tid)->quantum;
 }
 
@@ -92,26 +122,28 @@ int uthread_init (int quantum_usecs)
     pool = new PoolManager();
     starter->init(pool);
 
-    if (quantum_usecs < 0)
+    if (quantum_usecs <= 0)
     {
-        printf ("input error invalid quantum usedcs");
+        fprintf (stderr, "thread library error: quantum_usecs must be positive\n");
         return -1;
     }
     starter->initTimer(quantum_usecs);
     pool->initMainThread();
-    Starter::mask_signals(false);
+    Starter::unmask_signals();
 }
 
 // equals to setup threads. tid comes from Pool, push to pool.ready
 int uthread_spawn (thread_entry_point entry_point)
 {
     if(pool->count()>=MAX_THREAD_NUM){
-        return 1;
+        cout << "reached the max number" << endl; //TODO - remove to stderr
+        return -1;
     }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
-    Starter::mask_signals(true);
-    pool->addThread(stack, entry_point);
-    Starter::mask_signals(false);
+    Starter::mask_signals();
+    int curId = pool->addThread(stack, entry_point);
+    Starter::unmask_signals();
+    return curId;
 }
 
 int uthread_sleep(int num_quantums){
