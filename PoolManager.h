@@ -29,13 +29,13 @@ class PoolManager {
   //fields:
  private:
 //TODO return fields to private
-
+Thread *mainThread;
 
  public:
     inline static Thread* curRunning;
  set<Thread *> *blockedID;
  std::map<int, Thread *> *allThreads;
- std::queue<Thread *> *IDQueue;
+ std::deque<Thread *> *readyQueue;
  int isUsed[MAX_THREAD_NUM] = {0};
  int counter;
  int countReady;
@@ -48,7 +48,7 @@ class PoolManager {
     curRunning = nullptr;
     blockedID = new set<Thread *> ();
     allThreads = new map<int, Thread *> ();
-    IDQueue = new queue< Thread *> ();
+      readyQueue = new deque< Thread *> ();
   }
 
   void initMainThread ()
@@ -63,6 +63,7 @@ class PoolManager {
       sigemptyset (&(mainThread->env)->__saved_mask);
       allThreads->insert (pair<int, Thread *> (mainThread->id, mainThread));
       curRunning = mainThread;
+      this->mainThread = mainThread;
       sigsetjmp(mainThread->env, 1);
   }
 
@@ -90,7 +91,7 @@ class PoolManager {
     counter++;
     countReady++;
     allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
-    IDQueue->push(newTread);
+    readyQueue->push_back(newTread);
     newTread->duplicate=1;
     return newTread->id;
   }
@@ -109,13 +110,13 @@ class PoolManager {
       }
   }
 
-  Thread *nextAvailableReady ()
+    Thread *nextAvailableReady ()
   {
-      if(IDQueue->empty()){
-          return curRunning;
+      if(readyQueue->empty()){
+          return mainThread;
       }
-    Thread *candidate = IDQueue->front();
-    IDQueue->pop();
+    Thread *candidate = readyQueue->front();
+    readyQueue->pop_front();
     candidate->duplicate--;
     while ((candidate->status != READY) || (candidate->duplicate > 0))
       {
@@ -123,11 +124,11 @@ class PoolManager {
           {
             finalTerminate (candidate);
           }
-        if(IDQueue->empty()){
+        if(readyQueue->empty()){
             return curRunning;
         }
-        candidate = IDQueue->front ();
-        IDQueue->pop();
+        candidate = readyQueue->front ();
+        readyQueue->pop_front();
       }
     return candidate;
   }
@@ -156,21 +157,27 @@ class PoolManager {
   void preemptedThread ()
   {
     curRunning->status = READY;
-    IDQueue->push(curRunning);
+    readyQueue->push_back(curRunning);
     curRunning->duplicate++;
   }
 
   int resumeThread (int tid)
   {
       Thread* thread = getThreadById(tid);
-      auto res = blockedID->find (thread);
-      if (res != blockedID->end())
+      if (thread->status == BLOCKED)
       {
-          blockedID->erase (thread);
-          IDQueue->push (thread);
+          blockedID->erase(thread);
+          readyQueue->push_back(thread);
           thread->status = READY;
           thread->duplicate++;
-        return 0;
+          return 0;
+      }
+      //CHECK IF IT IN THE READY LIST
+      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
+      if(it == readyQueue->end())
+      {
+          readyQueue->push_back(thread);
+          return 0;
       }
       return -1;
   }
@@ -186,7 +193,7 @@ class PoolManager {
 
     delete allThreads;
     delete blockedID;
-    delete IDQueue;
+    delete readyQueue;
   }
 
   int terminateThread (int tid)
@@ -211,6 +218,8 @@ class PoolManager {
 //      return allThreads->size();
     return countReady;
   }
+
+
 };
 #endif
 

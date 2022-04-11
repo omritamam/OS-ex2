@@ -5,6 +5,7 @@ int RETURN_FROM_STARTER = 5;
 int Starter::init(PoolManager *staticPool) {
     pool = staticPool;
     totalQuantum = 1;
+    return 0;
 }
 
 void Starter::switchThread(int sig) {
@@ -17,12 +18,14 @@ void Starter::switchThread(int sig) {
         unmask_signals();
         return;
     }
+#pragma region handle old thread
     if(PoolManager::curRunning->status == TERMINATED){
         pool->finalTerminate(PoolManager::curRunning);
     }
     if(PoolManager::curRunning->status == RUNNING){
         Starter::pool->preemptedThread();
     }
+#pragma endregion
     //should check if there is no next available?
     Thread *nextThread = Starter::pool->nextAvailableReady();
     Starter::pool->setRunning(nextThread);

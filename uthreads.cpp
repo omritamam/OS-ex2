@@ -6,6 +6,7 @@
 
 inline static PoolManager *pool;
 inline static Starter *starter;
+#define MANUAL_SWITCH 4
 using namespace std;
 
 int checkValidTid(int tid){
@@ -47,7 +48,7 @@ int uthread_terminate (int tid)
     if (PoolManager::curRunning->id == tid)
     { //terminate himself
         PoolManager::curRunning->status= TERMINATED;
-        starter->initTimer();
+        starter->launchTimer();
         starter->switchThread (0);
     }
 }
@@ -64,23 +65,14 @@ int uthread_block(int tid)
         return -1;
     }
     pool->blockThread(tid);
-//    cout <<"try3" << endl;
     if (PoolManager::curRunning->id == tid)
-    { //terminate himself
-        starter->initTimer();
-        starter->switchThread (0);
+    {
+        //block himself
+        starter->launchTimer();
+        starter->switchThread (MANUAL_SWITCH);
     }
     Starter::unmask_signals();
 
-
-    //print state
-//    set<Thread*>::iterator itr;
-//    cout << "blocked IDs:"<<endl;
-//    for (itr = pool->blockedID->begin();
-//    itr != pool->blockedID->end(); itr++)
-//    {
-//        cout << *itr << " ";
-//    }
 }
 
 

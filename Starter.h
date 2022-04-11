@@ -13,6 +13,8 @@ class Starter {
  private:
     inline static PoolManager *pool;
     int quantum_usecs;
+    struct itimerval timer;
+
     inline static sigset_t sig_set = {{0}};
 
  public:
@@ -20,15 +22,9 @@ class Starter {
     int init(PoolManager *staticPool);
     static void switchThread(int sig);
 
-    int initTimer(){
-        return initTimer(quantum_usecs);
-    }
-
-
     int initTimer(int quantum_usecs){
         this->quantum_usecs = quantum_usecs;
         struct sigaction sa = {0};
-        struct itimerval timer;
         sigemptyset(&sig_set);
         sigaddset (&sig_set, SIGVTALRM);
         sa.sa_handler = &Starter::switchThread;
@@ -50,7 +46,11 @@ class Starter {
 
 
         // Start a virtual timer. It counts down whenever this process is executing.
-        Starter::mask_signals();
+        return launchTimer();
+    }
+
+    int launchTimer() const {
+        mask_signals();
         if (setitimer (ITIMER_VIRTUAL, &timer, NULL)) {
             printf("set timer error\n");
             return -1;
@@ -59,13 +59,13 @@ class Starter {
     }
 
     static void mask_signals(){
-            if(sigprocmask(SIG_BLOCK, &sig_set, nullptr) == -1){
+            if(sigprocmask(SIG_BLOCK, &sig_set, nullptr)){
                 fprintf(stderr, "system error: mask signals fail\n");
             }
     }
 
     static void unmask_signals(){
-        if(sigprocmask(SIG_UNBLOCK, &sig_set, nullptr) == -1){
+        if(sigprocmask(SIG_UNBLOCK, &sig_set, nullptr)){
             fprintf(stderr, "system error: mask signals fail\n");
         }
     }
