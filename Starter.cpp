@@ -35,6 +35,7 @@ void Starter::switchThread(int sig) {
         fprintf(stderr, "gotya!");
     }
     //TODO error
+    unmask_signals();
     siglongjmp(nextThread->env, RETURN_FROM_STARTER);
 
 }

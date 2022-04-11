@@ -78,10 +78,12 @@ Thread *mainThread;
   int addThread (char *stack, thread_entry_point entry_point)
   {
     Thread *newTread = new Thread ();
+    allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
     newTread->stackPointer = stack;
     newTread->id = findId();
     isUsed[newTread->id] = 1;
     newTread->status = READY;
+    readyQueue->push_back(newTread);
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
     sigsetjmp(newTread->env, 1);
@@ -90,8 +92,7 @@ Thread *mainThread;
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
     countReady++;
-    allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
-    readyQueue->push_back(newTread);
+
     newTread->duplicate=1;
     return newTread->id;
   }
@@ -118,7 +119,7 @@ Thread *mainThread;
     Thread *candidate = readyQueue->front();
     readyQueue->pop_front();
     candidate->duplicate--;
-    while ((candidate->status != READY) || (candidate->duplicate > 0))
+    while ((candidate->status != READY) || (candidate->duplicate > 1))
       {
         if (candidate->status == TERMINATED)
           {
@@ -167,18 +168,18 @@ Thread *mainThread;
       if (thread->status == BLOCKED)
       {
           blockedID->erase(thread);
-          readyQueue->push_back(thread);
           thread->status = READY;
+          readyQueue->push_back(thread);
           thread->duplicate++;
           return 0;
       }
       //CHECK IF IT IN THE READY LIST
-      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
-      if(it == readyQueue->end())
-      {
-          readyQueue->push_back(thread);
-          return 0;
-      }
+//      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
+//      if(it == readyQueue->end())
+//      {
+//          readyQueue->push_back(thread);
+//          return 0;
+//      }
       return -1;
   }
 
