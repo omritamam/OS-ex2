@@ -34,8 +34,9 @@ Thread *mainThread;
  public:
     inline static Thread* curRunning;
  set<Thread *> *blockedID;
- std::map<int, Thread *> *allThreads;
+ // std::map<int, Thread *> *allThreads;
  std::deque<Thread *> *readyQueue;
+ Thread* allThreads[MAX_THREAD_NUM] = {0};
  int isUsed[MAX_THREAD_NUM] = {0};
  int counter;
  int countReady;
@@ -47,7 +48,7 @@ Thread *mainThread;
 //    counter = 1;
     curRunning = nullptr;
     blockedID = new set<Thread *> ();
-    allThreads = new map<int, Thread *> ();
+//    allThreads = new map<int, Thread *> ();
       readyQueue = new deque< Thread *> ();
   }
 
@@ -61,7 +62,7 @@ Thread *mainThread;
       isUsed[0] = 1;
       mainThread->quantum = 1;
       sigemptyset (&(mainThread->env)->__saved_mask);
-      allThreads->insert (pair<int, Thread *> (mainThread->id, mainThread));
+      allThreads[mainThread->id] =  mainThread;
       curRunning = mainThread;
       this->mainThread = mainThread;
       sigsetjmp(mainThread->env, 1);
@@ -90,7 +91,7 @@ Thread *mainThread;
     sigemptyset (&(newTread->env)->__saved_mask);
     counter++;
     countReady++;
-    allThreads->insert(pair<int, Thread *> (newTread->id, newTread));
+    allThreads[newTread->id]  = newTread;
     readyQueue->push_back(newTread);
     newTread->duplicate=1;
     return newTread->id;
@@ -100,7 +101,7 @@ Thread *mainThread;
   {
     if (thread->duplicate <= 1 || thread->status == TERMINATED)
       {
-        allThreads->erase (thread->id);
+        allThreads[thread->id] = NULL;
         delete thread->stackPointer;
         delete thread;
       }
@@ -132,23 +133,23 @@ Thread *mainThread;
       }
     return candidate;
   }
-
-  Thread *getThreadById (int id)
-  {
-    auto res = (*allThreads).find (id);
-    if (res != (*allThreads).end ())
-      {
-        return res->second;
-      }
-    else
-      {
-        return nullptr;
-      }
-  }
+//
+//  Thread *getThreadById (int id)
+//  {
+//    auto res = (*allThreads).find (id);
+//    if (res != (*allThreads).end ())
+//      {
+//        return res->second;
+//      }
+//    else
+//      {
+//        return nullptr;
+//      }
+//  }
 
   int blockThread (int tid)
   {
-     Thread* thread = getThreadById (tid);
+     Thread* thread = allThreads[tid];
      thread->status = BLOCKED;
      auto ret = blockedID->insert(thread);
      return ret.second;
@@ -163,7 +164,7 @@ Thread *mainThread;
 
   int resumeThread (int tid)
   {
-      Thread* thread = getThreadById(tid);
+      Thread* thread = allThreads[tid];
       if (thread->status == BLOCKED)
       {
           blockedID->erase(thread);
@@ -184,21 +185,20 @@ Thread *mainThread;
 
   void terminateProcess ()
   {
-    for (const auto &kv : *allThreads)
+    for (int i = 0; i < MAX_THREAD_NUM; i++)
       {
-        delete kv.second->stackPointer;
-        delete kv.second;
+        delete allThreads[i]->stackPointer;
+        delete allThreads[i];
       }
-    allThreads->clear ();
+    allThreads[MAX_THREAD_NUM] = {0};
 
-    delete allThreads;
     delete blockedID;
     delete readyQueue;
   }
 
   int terminateThread (int tid)
   {
-    Thread *curThread = getThreadById (tid);
+      Thread* curThread = allThreads[tid];
     if(curThread == nullptr){
       return -1;
     }
@@ -219,7 +219,14 @@ Thread *mainThread;
     return countReady;
   }
 
-
+  void updateWaitingTime(){
+      for (int i = 0; i < MAX_THREAD_NUM; i++)
+      {
+          if(allThreads[i]->isSleep){
+              allThreads[i]->waitingTime--;
+          }
+      }
+  }
 };
 #endif
 

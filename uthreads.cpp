@@ -139,5 +139,11 @@ int uthread_spawn (thread_entry_point entry_point)
 }
 
 int uthread_sleep(int num_quantums){
+    if (PoolManager::curRunning->id == 0){
+        fprintf(stderr, "main thread can't sleep");//TODO
+        return -1;
+    }
+    PoolManager::curRunning->isSleep = true;
+    PoolManager::curRunning->waitingTime = num_quantums;
     return 0;
 }

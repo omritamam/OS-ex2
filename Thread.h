@@ -14,6 +14,8 @@ class Thread {
   int duplicate;
   int quantum;
   char* stackPointer;
+  bool isSleep;
+  int waitingTime;
 };
 
 

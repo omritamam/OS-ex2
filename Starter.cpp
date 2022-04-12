@@ -30,6 +30,7 @@ void Starter::switchThread(int sig) {
     Thread *nextThread = Starter::pool->nextAvailableReady();
     Starter::pool->setRunning(nextThread);
     Starter::totalQuantum++;
+    PoolManager::updateWaitingTime();
     PoolManager::curRunning->quantum++;
     if(PoolManager::curRunning->quantum > 7 && PoolManager::curRunning->id == 0){
         fprintf(stderr, "gotya!");
