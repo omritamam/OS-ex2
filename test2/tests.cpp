@@ -404,7 +404,6 @@ int test_get_total_quantums ()
 
 int main (int argc, char *argv[])
 {
-
   test_reallocte_id ();
   test_terminate_error ();
   test_block_errors ();

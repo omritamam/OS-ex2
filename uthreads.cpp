@@ -1,11 +1,10 @@
 #include <cstdlib>
 #include <cstdio>
 #include <armadillo>
-#include "PoolManager.h"
-#include "Starter.h"
-
-inline static PoolManager *pool;
-inline static Starter *starter;
+#include "Scheduler.h"
+#include "Dispather.h"
+ static Scheduler *pool;
+ static Dispather *dispather;
 #define MANUAL_SWITCH 4
 using namespace std;
 
@@ -24,41 +23,41 @@ int checkValidTid(int tid){
 }
 
 // check if it terminates itself -
-// yes - pool.moveToDelete + starter.start
+// yes - pool.moveToDelete + dispather.start
 // no - pool.moveToDelete
 int uthread_terminate (int tid)
 {
-    Starter::mask_signals();
+    Dispather::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
     if (tid == MAIN_THREAD_TID)
     { //main thread terminated
         pool->terminateProcess ();
-        delete starter;
+        delete dispather;
         delete pool;
         exit(0);
     }
-    if (PoolManager::curRunning->id == tid)
+    if (Scheduler::curRunning->id == tid)
     { //terminate himself
         if (pool->terminateThread (tid))
         {
             return -1;
         }
-        starter->launchTimer();
-        starter->switchThread (0);
+        dispather->launchTimer();
+        dispather->switchThread (0);
     }
     if (pool->terminateThread (tid))
     {
         return -1;
     }
-    Starter::unmask_signals();
-
+    Dispather::unmask_signals();
+    return 0;
 }
 
 int uthread_block(int tid)
 {
-    Starter::mask_signals();
+    Dispather::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
@@ -68,20 +67,20 @@ int uthread_block(int tid)
         return -1;
     }
     pool->blockThread(tid);
-    if (PoolManager::curRunning->id == tid)
+    if (Scheduler::curRunning->id == tid)
     {
         //block himself
-        starter->launchTimer();
-        starter->switchThread (MANUAL_SWITCH);
+        dispather->launchTimer();
+        dispather->switchThread (MANUAL_SWITCH);
     }
-    Starter::unmask_signals();
-
+    Dispather::unmask_signals();
+    return 0;
 }
 
 
 int uthread_resume(int tid)
 {
-    Starter::mask_signals();
+    Dispather::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
     }
@@ -89,7 +88,7 @@ int uthread_resume(int tid)
         pool->resumeThread(tid);
     }
     pool->allThreads[tid]->status = READY;
-    Starter::unmask_signals();
+    Dispather::unmask_signals();
     return 0;
 };
 
@@ -99,7 +98,7 @@ int uthread_get_tid(){
 }
 
 int uthread_get_total_quantums(){
-    return starter->totalQuantum;
+    return dispather->totalQuantum;
 }
 
 int uthread_get_quantums(int tid){
@@ -111,18 +110,19 @@ int uthread_get_quantums(int tid){
 
 int uthread_init (int quantum_usecs)
 {
-    starter = new Starter();
-    pool = new PoolManager();
-    starter->init(pool);
+    dispather = new Dispather();
+    pool = new Scheduler();
+    dispather->init(pool);
 
     if (quantum_usecs <= 0)
     {
         fprintf (stderr, "thread library error: quantum_usecs must be positive\n");
         return -1;
     }
-    starter->initTimer(quantum_usecs);
+    dispather->initTimer(quantum_usecs);
     pool->initMainThread();
-    Starter::unmask_signals();
+    Dispather::unmask_signals();
+    return 0;
 }
 
 // equals to setup threads. tid comes from Pool, push to pool.ready
@@ -137,26 +137,29 @@ int uthread_spawn (thread_entry_point entry_point)
         return -1;
     }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
-    Starter::mask_signals();
+    Dispather::mask_signals();
     int curId = pool->addThread(stack, entry_point);
-    Starter::unmask_signals();
+    Dispather::unmask_signals();
     return curId;
 }
 
 int uthread_sleep(int num_quantums){
-    Starter::mask_signals();
+    Dispather::mask_signals();
     if(num_quantums <= 0){
         fprintf(stderr, "thread library error: the num_quantums need to be non negative\n");
         return -1;
     }
-    if (PoolManager::curRunning->id == MAIN_THREAD_TID){
+    if (Scheduler::curRunning->id == MAIN_THREAD_TID){
         fprintf(stderr, "thread library error: main thread can't sleep\n");
         return -1;
     }
-    PoolManager::curRunning->isSleep = true;
-    PoolManager::curRunning->waitingTime = num_quantums;
-    PoolManager::curRunning->status = READY;
-    starter->launchTimer();
-    Starter::switchThread (MANUAL_SWITCH);
+    Scheduler::curRunning->isSleep = true;
+    Scheduler::curRunning->waitingTime = num_quantums;
+    Scheduler::curRunning->status = READY;
+    dispather->launchTimer();
+    Dispather::switchThread (MANUAL_SWITCH);
+    return 0;
+}
+int main(){
     return 0;
 }

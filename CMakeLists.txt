@@ -1,18 +1,13 @@
 cmake_minimum_required(VERSION 3.17)
 project(OS_ex2)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 include_directories(.)
 
 add_executable(OS_ex2
-#        Demo/demo_jmp.c
-#        Demo/demo_itimer.c
-        Thread.h
-        uthreads.h
-        test2/tests.cpp
-        PoolManager.h
-        Starter.h
+        Dispather.cpp
+        Scheduler.cpp
         uthreads.cpp
-#        main.cpp
-        Starter.cpp)
+#
+        )
