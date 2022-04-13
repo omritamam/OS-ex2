@@ -19,9 +19,6 @@ void Starter::switchThread(int sig) {
         return;
     }
 #pragma region handle old thread
-    if(PoolManager::curRunning->status == TERMINATED){
-        pool->finalTerminate(PoolManager::curRunning);
-    }
     if(PoolManager::curRunning->status == RUNNING && (!PoolManager::curRunning->isSleep)){
         Starter::pool->preemptedThread();
     }

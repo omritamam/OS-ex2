@@ -15,7 +15,7 @@ int checkValidTid(int tid){
         fprintf(stderr, "thread library error: the thread id is invalid (it needs to be  between 0 to 99)\n");
         return -1;
     }
-    if ( pool->isUsed[tid]==0 )
+    if ( pool->allThreads[tid] == nullptr)
     {
         fprintf(stderr, "thread library error: the thread id's cell is empty in the threadsArr\n");
         return -1;
@@ -28,7 +28,6 @@ int checkValidTid(int tid){
 // no - pool.moveToDelete
 int uthread_terminate (int tid)
 {
-//    cout << "count before" <<pool->count()<<endl;
     Starter::mask_signals();
     if(checkValidTid(tid) == -1){
         return -1;
@@ -40,16 +39,18 @@ int uthread_terminate (int tid)
         delete pool;
         exit(0);
     }
-    if (pool->terminateThread (tid))
-    {
-
-        return -1;
-    }
     if (PoolManager::curRunning->id == tid)
     { //terminate himself
-        PoolManager::curRunning->status= TERMINATED;
+        if (pool->terminateThread (tid))
+        {
+            return -1;
+        }
         starter->launchTimer();
         starter->switchThread (0);
+    }
+    if (pool->terminateThread (tid))
+    {
+        return -1;
     }
 }
 

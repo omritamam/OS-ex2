@@ -15,7 +15,7 @@
 #define READY 1
 #define RUNNING 2
 #define BLOCKED 3
-#define TERMINATED 4
+//#define TERMINATED 4
 #define MAIN_THREAD_TID 0
 
 /* External interface */
@@ -36,7 +36,6 @@ class PoolManager {
  // std::map<int, Thread *> *allThreads;
  std::deque<Thread *> *readyQueue;
  Thread* allThreads[MAX_THREAD_NUM] = {0};
- int isUsed[MAX_THREAD_NUM] = {0};
  int counter;
  int countReady;
 
@@ -58,19 +57,19 @@ class PoolManager {
       mainThread->id = MAIN_THREAD_TID;
       mainThread->status = RUNNING;
       mainThread->duplicate = 0;
-      isUsed[0] = 1;
       mainThread->quantum = 1;
       mainThread->waitingTime = -1;
       mainThread->isSleep = false;
       sigemptyset (&(mainThread->env)->__saved_mask);
       allThreads[mainThread->id] =  mainThread;
       curRunning = mainThread;
+      curRunning = mainThread;
       sigsetjmp(mainThread->env, 1);
   }
 
   int findId(){
       for(int i = 1; i < MAX_THREAD_NUM; i++){
-          if(!(isUsed[i])){
+          if(allThreads[i] == nullptr){
               return i;
           }
       }
@@ -81,7 +80,6 @@ class PoolManager {
     Thread *newTread = new Thread ();
     newTread->stackPointer = stack;
     newTread->id = findId();
-    isUsed[newTread->id] = 1;
     newTread->status = READY;
     newTread->waitingTime = -1;
     newTread->isSleep = false;
@@ -99,19 +97,17 @@ class PoolManager {
     return newTread->id;
   }
 
-  void finalTerminate (Thread *thread)
-  {
-    if (thread->duplicate <= 1 || thread->status == TERMINATED)
-      {
-        allThreads[thread->id] = NULL;
-        delete thread->stackPointer;
-        delete thread;
-      }
-    else
-      {
-        thread->duplicate--;
-      }
-  }
+//  void finalTerminate (Thread *thread)
+//  {
+//    if (thread->duplicate <= 1 || thread->status == TERMINATED)
+//      {
+//
+//      }
+//    else
+//      {
+//        thread->duplicate--;
+//      }
+//  }
 
     Thread *nextAvailableReady ()
   {
@@ -123,10 +119,10 @@ class PoolManager {
     candidate->duplicate--;
     while ((candidate->status != READY) || (candidate->duplicate == 1))
       {
-        if (candidate->status == TERMINATED)
-          {
-            finalTerminate (candidate);
-          }
+//        if (candidate->status == TERMINATED)
+//          {
+//            finalTerminate (candidate);
+//          }
         if(readyQueue->empty()){
             return curRunning;
         }
@@ -163,9 +159,7 @@ class PoolManager {
     curRunning->status = READY;
     readyQueue->push_back(curRunning);
     curRunning->duplicate++;
-    if(allThreads[0]->duplicate == 2){
-        fprintf(stderr,"gg");
-    }
+
   }
 
   int resumeThread (int tid)
@@ -207,13 +201,16 @@ class PoolManager {
 
   int terminateThread (int tid)
   {
-      Thread* curThread = allThreads[tid];
-    if(curThread == nullptr){
+      Thread* thread = allThreads[tid];
+      if(thread == nullptr){
       return -1;
     }
-    curThread->status = TERMINATED;
+      readyQueue->erase(remove(readyQueue->begin(), readyQueue->end(), thread), readyQueue->end());
+    allThreads[tid] = nullptr;
+    delete thread->stackPointer;
+    delete thread;
     countReady--;
-    isUsed[tid] = 0;
+
     return 0;
   }
 
