@@ -132,6 +132,10 @@ int uthread_spawn (thread_entry_point entry_point)
         fprintf(stderr, "thread library error: reached the max number\n");
         return -1;
     }
+    if(entry_point == nullptr){
+        fprintf(stderr, "thread library error: spawn can't get null entry point\n");
+        return -1;
+    }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
     Starter::mask_signals();
     int curId = pool->addThread(stack, entry_point);
