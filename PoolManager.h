@@ -67,6 +67,7 @@ class PoolManager {
               return i;
           }
       }
+      return -1;
   }
   
   int addThread (char *stack, thread_entry_point entry_point)

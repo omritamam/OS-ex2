@@ -53,7 +53,7 @@ int uthread_terminate (int tid)
         return -1;
     }
     Starter::unmask_signals();
-
+    return 0;
 }
 
 int uthread_block(int tid)
@@ -75,7 +75,7 @@ int uthread_block(int tid)
         starter->switchThread (MANUAL_SWITCH);
     }
     Starter::unmask_signals();
-
+    return 0;
 }
 
 
@@ -123,6 +123,7 @@ int uthread_init (int quantum_usecs)
     starter->initTimer(quantum_usecs);
     pool->initMainThread();
     Starter::unmask_signals();
+    return 0;
 }
 
 // equals to setup threads. tid comes from Pool, push to pool.ready
