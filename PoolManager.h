@@ -29,7 +29,6 @@ class PoolManager {
   //fields:
  private:
 //TODO return fields to private
-Thread *mainThread;
 
  public:
     inline static Thread* curRunning;
@@ -66,7 +65,6 @@ Thread *mainThread;
       sigemptyset (&(mainThread->env)->__saved_mask);
       allThreads[mainThread->id] =  mainThread;
       curRunning = mainThread;
-      this->mainThread = mainThread;
       sigsetjmp(mainThread->env, 1);
   }
 
@@ -97,7 +95,7 @@ Thread *mainThread;
     countReady++;
     allThreads[newTread->id]  = newTread;
     readyQueue->push_back(newTread);
-    newTread->duplicate=1;
+    newTread->duplicate = 1;
     return newTread->id;
   }
 
@@ -118,12 +116,12 @@ Thread *mainThread;
     Thread *nextAvailableReady ()
   {
       if(readyQueue->empty()){
-          return mainThread;
+          return allThreads[0];
       }
     Thread *candidate = readyQueue->front();
     readyQueue->pop_front();
     candidate->duplicate--;
-    while ((candidate->status != READY) || (candidate->duplicate > 1))
+    while ((candidate->status != READY) || (candidate->duplicate == 1))
       {
         if (candidate->status == TERMINATED)
           {
@@ -134,6 +132,7 @@ Thread *mainThread;
         }
         candidate = readyQueue->front ();
         readyQueue->pop_front();
+        candidate->duplicate--;
       }
     return candidate;
   }
@@ -164,6 +163,9 @@ Thread *mainThread;
     curRunning->status = READY;
     readyQueue->push_back(curRunning);
     curRunning->duplicate++;
+    if(allThreads[0]->duplicate == 2){
+        fprintf(stderr,"gg");
+    }
   }
 
   int resumeThread (int tid)
@@ -191,10 +193,11 @@ Thread *mainThread;
 
   void terminateProcess ()
   {
-    for (int i = 0; i < MAX_THREAD_NUM; i++)
+    for (auto & thread : allThreads)
       {
-        delete allThreads[i]->stackPointer;
-        delete allThreads[i];
+        if(thread != nullptr)
+            delete thread->stackPointer;
+        delete thread;
       }
     allThreads[MAX_THREAD_NUM] = {0};
 
