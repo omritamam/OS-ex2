@@ -87,6 +87,7 @@ int uthread_resume(int tid)
     if(!pool->allThreads[tid]->isSleep){
         pool->resumeThread(tid);
     }
+    pool->allThreads[tid]->status = READY;
     Starter::unmask_signals();
     return 0;
 };
@@ -153,6 +154,7 @@ int uthread_sleep(int num_quantums){
     }
     PoolManager::curRunning->isSleep = true;
     PoolManager::curRunning->waitingTime = num_quantums + 1;
+    PoolManager::curRunning->status = READY;
     starter->launchTimer();
     Starter::switchThread (MANUAL_SWITCH);
     return 0;

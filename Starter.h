@@ -70,7 +70,5 @@ class Starter {
         }
     }
 
-
-    static void log(const char *prefix);
 };
 #endif

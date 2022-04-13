@@ -9,13 +9,10 @@
 #include <map>
 #include <queue>
 #include <csignal>
-#include <assert.h>
-
 
 #define READY 1
 #define RUNNING 2
 #define BLOCKED 3
-//#define TERMINATED 4
 #define MAIN_THREAD_TID 0
 
 /* External interface */
@@ -31,22 +28,19 @@ class PoolManager {
 //TODO return fields to private
 
  public:
-    inline static Thread* curRunning;
- set<Thread *> *blockedID;
- // std::map<int, Thread *> *allThreads;
- std::deque<Thread *> *readyQueue;
- Thread* allThreads[MAX_THREAD_NUM] = {0};
- int counter;
- int countReady;
+     inline static Thread* curRunning;
+     set<Thread *> *blockedID;
+     std::deque<Thread *> *readyQueue;
+     Thread* allThreads[MAX_THREAD_NUM] = {0};
+     int counter;
+     int countReady;
 
   //Methods
   PoolManager ()
   {
-      countReady = 1; //should start from 1?
-//    counter = 1;
-    curRunning = nullptr;
-    blockedID = new set<Thread *> ();
-//    allThreads = new map<int, Thread *> ();
+      countReady = 1;
+      curRunning = nullptr;
+      blockedID = new set<Thread *> ();
       readyQueue = new deque< Thread *> ();
   }
 
@@ -97,17 +91,6 @@ class PoolManager {
     return newTread->id;
   }
 
-//  void finalTerminate (Thread *thread)
-//  {
-//    if (thread->duplicate <= 1 || thread->status == TERMINATED)
-//      {
-//
-//      }
-//    else
-//      {
-//        thread->duplicate--;
-//      }
-//  }
 
     Thread *nextAvailableReady ()
   {
@@ -119,10 +102,7 @@ class PoolManager {
     candidate->duplicate--;
     while ((candidate->status != READY) || (candidate->duplicate == 1))
       {
-//        if (candidate->status == TERMINATED)
-//          {
-//            finalTerminate (candidate);
-//          }
+
         if(readyQueue->empty()){
             return curRunning;
         }
@@ -132,19 +112,7 @@ class PoolManager {
       }
     return candidate;
   }
-//
-//  Thread *getThreadById (int id)
-//  {
-//    auto res = (*allThreads).find (id);
-//    if (res != (*allThreads).end ())
-//      {
-//        return res->second;
-//      }
-//    else
-//      {
-//        return nullptr;
-//      }
-//  }
+
 
   int blockThread (int tid)
   {
@@ -175,13 +143,6 @@ class PoolManager {
           }
           return 0;
       }
-      //CHECK IF IT IN THE READY LIST
-//      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
-//      if(it == readyQueue->end())
-//      {
-//          readyQueue->push_back(thread);
-//          return 0;
-//      }
       return -1;
   }
 
@@ -221,7 +182,6 @@ class PoolManager {
 
 
   unsigned long count(){
-//      return allThreads->size();
     return countReady;
   }
 
