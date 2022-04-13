@@ -1,0 +1,143 @@
+Test 1
+thread 1 and 2 will print 'thread-i' 5 times each
+thread-1: round-0, quantums-1
+thread-2: round-0, quantums-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantums-2
+thread-1: round-2, quantums-3
+thread-2: round-2, quantums-3
+thread-1: round-3, quantums-4
+thread-1: round-4, quantums-4
+thread-2: round-3, quantums-4
+thread-2: round-4, quantums-5
+threads 1 and 2 finished successfully
+
+Test 2
+thread 1 will count to 8 and thread 2 to 5.
+thread-1: round-0, quantums-1
+thread-2: round-0, quantums-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantums-2
+thread-1: round-2, quantums-3
+thread-2: round-2, quantums-3
+thread-1: round-3, quantums-4
+blocking thread 2!!!
+thread-1: round-4, quantums-4
+thread-1: round-5, quantums-5
+thread-1: round-6, quantums-6
+thread-1: round-7, quantums-7
+resuming thread 2!!!
+thread-2: round-3, quantums-4
+thread-2: round-4, quantums-4
+threads 1 and 2 finished successfully
+
+Test 3
+thread 1 and 2 will print 'thread-i' 8 times each
+thread-1: round-0, quantums-1
+thread-2: round-0, quantums-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantums-2
+thread-1: round-2, quantums-3
+thread-1: round-3, quantums-3
+putting thread 1 to sleep for 5 quantums.
+thread-2: round-2, quantums-3
+thread-2: round-3, quantums-4
+thread-2: round-4, quantums-4
+thread-2: round-5, quantums-5
+thread-2: round-6, quantums-6
+thread-1: round-4, quantums-4
+thread-2: round-7, quantums-7
+thread-1: round-5, quantums-5
+thread-1: round-6, quantums-6
+thread-1: round-7, quantums-6
+threads 1 and 2 finished successfully
+
+Test 4
+thread 1 and 2 will print 'thread-i' 8 times each
+thread 1 should be blocked and resumed before waking up from its sleep
+thread-1: round-0, quantums-1
+thread-2: round-0, quantums-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantums-2
+thread-1: round-2, quantums-3
+thread-1: round-3, quantums-3
+putting thread 1 to sleep for 20 quantums
+thread-2: round-2, quantums-3
+thread-2: round-3, quantums-3
+thread-2: round-4, quantums-3
+blocking thread 1
+thread-2: round-5, quantums-3
+thread-2: round-6, quantums-3
+thread-2: round-7, quantums-3
+resuming thread 1
+thread 1 is awake, it was out for 22 quantums
+thread-1: round-4, quantums-4
+thread-1: round-5, quantums-5
+thread-1: round-6, quantums-6
+thread-1: round-7, quantums-6
+threads 1 and 2 finished successfully
+
+Test 5
+thread 1 and 2 will print 'thread-i' 8 times each
+thread 1 should be blocked while sleeping, and resumed when is awake
+thread-1: round-0, quantums-1
+thread-2: round-0, quantum-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantum-2
+thread-1: round-2, quantums-3
+thread-1: round-3, quantums-3
+putting thread 1 to sleep for 10 quantums
+thread-2: round-2, quantum-3
+thread-2: round-3, quantum-3
+thread-2: round-4, quantum-3
+blocking thread 1
+thread-2: round-5, quantum-3
+thread-2: round-6, quantum-3
+thread-2: round-7, quantum-3
+resuming thread 1
+thread 1 is awake, it was out for 23 quantums
+thread-1: round-4, quantums-4
+thread-1: round-5, quantums-5
+thread-1: round-6, quantums-6
+thread-1: round-7, quantums-7
+threads 1 and 2 finished successfully
+
+Test 6
+checking allocation of ids.
+Success
+
+Test 7
+Spawning 5 threads, each thread will print thread-i 5 times
+thread-1: round-0, quantums-1
+thread-2: round-0, quantums-1
+thread-5: round-0, quantums-1
+thread-1: round-1, quantums-2
+thread-2: round-1, quantums-2
+thread-3: round-0, quantums-2
+thread-4: round-0, quantums-2
+thread-5: round-1, quantums-2
+thread-1: round-2, quantums-3
+thread-2: round-2, quantums-3
+thread-5: round-2, quantums-3
+thread-1: round-3, quantums-4
+thread-1: round-4, quantums-4
+thread-2: round-3, quantums-4
+thread-3: round-1, quantums-4
+thread-4: round-1, quantums-4
+thread-5: round-3, quantums-4
+thread-5: round-4, quantums-4
+thread-2: round-4, quantums-5
+thread-3: round-2, quantums-5
+thread-4: round-2, quantums-5
+thread-3: round-3, quantums-7
+thread-4: round-3, quantums-7
+thread-4: round-4, quantums-8
+thread-3: round-4, quantums-9
+Success
+
+Test 8
+thread library error: Max number of threads exceeded.
+max limit reached - this is good!
+finished spawning and terminating 100 threads successfully.
+
+Process finished with exit code 0
