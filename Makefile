@@ -12,10 +12,6 @@ CXXFLAGS = -Wall -std=c++11 -g $(INCS)
 UTHREADSLIB = libuthreads.a
 TARGETS = $(UTHREADSLIB)
 
-TAR=tar
-TARFLAGS=-cvf
-TARNAME=ex2.tar
-TARSRCS=$(LIBSRC) Makefile README $(UTHREADSLIB)
 
 all: $(TARGETS)
 
@@ -29,5 +25,3 @@ clean:
 depend:
 	makedepend -- $(CFLAGS) -- $(SRC) $(LIBSRC)
 
-tar:
-	$(TAR) $(TARFLAGS) $(TARNAME) $(TARSRCS)

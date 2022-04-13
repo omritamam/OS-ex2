@@ -1,52 +1,26 @@
-#ifndef OS_EX2_UTHREADS_H
-#define OS_EX2_UTHREADS_H
+/*
+ * User-Level Threads Library (uthreads)
+ * Hebrew University OS course.
+ * Author: OS, os@cs.huji.ac.il
+ */
 
-#ifdef __x86_64__
-typedef unsigned long address_t;
-typedef void (*thread_entry_point) (void);
-
-#define JB_SP 6
-#define JB_PC 7
-
-/* A translation is required when using an address of a variable.
-   Use this as a black box in your code. */
-inline address_t translate_address (address_t addr)
-{
-    address_t ret;
-    asm volatile("xor    %%fs:0x30,%0\n"
-                 "rol    $0x11,%0\n"
-                 : "=g" (ret)
-                 : "0" (addr));
-    return ret;
-}
-
-#else
-/* code for 32 bit Intel arch */
-
-typedef unsigned int address_t;
-#define JB_SP 4
-#define JB_PC 5
+#ifndef _UTHREADS_H
+#define _UTHREADS_H
 
 
-/* A translation is required when using an address of a variable.
-   Use this as a black box in your code. */
-address_t translate_address(address_t addr)
-{
-    address_t ret;
-    asm volatile("xor    %%gs:0x18,%0\n"
-                 "rol    $0x9,%0\n"
-                 : "=g" (ret)
-                 : "0" (addr));
-    return ret;
-}
+#define MAX_THREAD_NUM 100 /* maximal number of threads */
+#define STACK_SIZE 4096 /* stack size per thread (in bytes) */
 
+typedef void (*thread_entry_point)(void);
 
-#endif
+/* External interface */
 
 
 /**
  * @brief initializes the thread library.
  *
+ * Once this function returns, the main thread (tid == 0) will be set as RUNNING. There is no need to 
+ * provide an entry_point or to create a stack for the main thread - it will be using the "regular" stack and PC.
  * You may assume that this function is called before any other thread library function, and that it is called
  * exactly once.
  * The input to the function is the length of a quantum in micro-seconds.
@@ -64,10 +38,12 @@ int uthread_init(int quantum_usecs);
  * The uthread_spawn function should fail if it would cause the number of concurrent threads to exceed the
  * limit (MAX_THREAD_NUM).
  * Each thread should be allocated with a stack of size STACK_SIZE bytes.
+ * It is an error to call this function with a null entry_point.
  *
  * @return On success, return the ID of the created thread. On failure, return -1.
 */
 int uthread_spawn(thread_entry_point entry_point);
+
 
 /**
  * @brief Terminates the thread with ID tid and deletes it from all relevant control structures.
@@ -80,6 +56,7 @@ int uthread_spawn(thread_entry_point entry_point);
  * itself or the main thread is terminated, the function does not return.
 */
 int uthread_terminate(int tid);
+
 
 /**
  * @brief Blocks the thread with ID tid. The thread may be resumed later using uthread_resume.
@@ -108,10 +85,12 @@ int uthread_resume(int tid);
  * @brief Blocks the RUNNING thread for num_quantums quantums.
  *
  * Immediately after the RUNNING thread transitions to the BLOCKED state a scheduling decision should be made.
- * After the sleeping time is over, the thread should go back to the end of the READY threads list.
+ * After the sleeping time is over, the thread should go back to the end of the READY queue.
+ * If the thread which was just RUNNING should also be added to the READY queue, or if multiple threads wake up 
+ * at the same time, the order in which they're added to the end of the READY queue doesn't matter.
  * The number of quantums refers to the number of times a new quantum starts, regardless of the reason. Specifically,
  * the quantum of the thread which has made the call to uthread_sleep isn’t counted.
- * It is considered an error if the main thread (tid==0) calls this function.
+ * It is considered an error if the main thread (tid == 0) calls this function.
  *
  * @return On success, return 0. On failure, return -1.
 */
@@ -147,5 +126,6 @@ int uthread_get_total_quantums();
  * @return On success, return the number of quantums of the thread with ID tid. On failure, return -1.
 */
 int uthread_get_quantums(int tid);
-#endif
 
+
+#endif
