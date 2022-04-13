@@ -168,9 +168,11 @@ Thread *mainThread;
       if (thread->status == BLOCKED)
       {
           blockedID->erase(thread);
-          readyQueue->push_back(thread);
           thread->status = READY;
-          thread->duplicate++;
+          if(!thread->isSleep){
+              readyQueue->push_back(thread);
+              thread->duplicate++;
+          }
           return 0;
       }
       //CHECK IF IT IN THE READY LIST
@@ -220,10 +222,17 @@ Thread *mainThread;
   }
 
   void updateWaitingTime(){
-      for (int i = 0; i < MAX_THREAD_NUM; i++)
+      for (auto & thread : allThreads)
       {
-          if(allThreads[i]->isSleep){
-              allThreads[i]->waitingTime--;
+          if(thread->isSleep){
+              thread->waitingTime--;
+          }
+          if(thread->waitingTime == 0){
+              thread->isSleep = false;
+              if(thread->status == READY){
+                  readyQueue->push_back(thread);
+                  thread->duplicate++;
+              }
           }
       }
   }

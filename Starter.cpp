@@ -22,7 +22,7 @@ void Starter::switchThread(int sig) {
     if(PoolManager::curRunning->status == TERMINATED){
         pool->finalTerminate(PoolManager::curRunning);
     }
-    if(PoolManager::curRunning->status == RUNNING){
+    if(PoolManager::curRunning->status == RUNNING && !PoolManager::curRunning->isSleep){
         Starter::pool->preemptedThread();
     }
 #pragma endregion
@@ -30,7 +30,7 @@ void Starter::switchThread(int sig) {
     Thread *nextThread = Starter::pool->nextAvailableReady();
     Starter::pool->setRunning(nextThread);
     Starter::totalQuantum++;
-    PoolManager::updateWaitingTime();
+    pool->updateWaitingTime();
     PoolManager::curRunning->quantum++;
     if(PoolManager::curRunning->quantum > 7 && PoolManager::curRunning->id == 0){
         fprintf(stderr, "gotya!");

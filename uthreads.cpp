@@ -83,7 +83,9 @@ int uthread_resume(int tid)
     if(checkValidTid(tid) == -1){
         return -1;
     }
-    pool->resumeThread(tid);
+    if(!pool->allThreads[tid]->isSleep){
+        pool->resumeThread(tid);
+    }
     Starter::unmask_signals();
     return 0;
 };
@@ -105,7 +107,7 @@ int uthread_get_quantums(int tid){
     if(checkValidTid(tid) == -1){
         return -1;
     }
-    return pool->getThreadById(tid)->quantum;
+    return pool->allThreads[tid]->quantum;
 }
 
 int uthread_init (int quantum_usecs)
@@ -128,7 +130,7 @@ int uthread_init (int quantum_usecs)
 int uthread_spawn (thread_entry_point entry_point)
 {
     if(pool->count()>=MAX_THREAD_NUM){
-        cout << "reached the max number" << endl; //TODO - remove to stderr
+        fprintf(stderr, "thread library error: reached the max number\n");
         return -1;
     }
     char *stack = static_cast<char *>(malloc(STACK_SIZE));
@@ -139,11 +141,18 @@ int uthread_spawn (thread_entry_point entry_point)
 }
 
 int uthread_sleep(int num_quantums){
-    if (PoolManager::curRunning->id == 0){
-        fprintf(stderr, "main thread can't sleep");//TODO
+    Starter::mask_signals();
+    if(num_quantums <= 0){
+        fprintf(stderr, "thread library error: the num_quantums need to be non negative\n");
+        return -1;
+    }
+    if (PoolManager::curRunning->id == MAIN_THREAD_TID){
+        fprintf(stderr, "thread library error: main thread can't sleep\n");
         return -1;
     }
     PoolManager::curRunning->isSleep = true;
-    PoolManager::curRunning->waitingTime = num_quantums;
+    PoolManager::curRunning->waitingTime = num_quantums + 1;
+    starter->launchTimer();
+    Starter::switchThread (MANUAL_SWITCH);
     return 0;
 }

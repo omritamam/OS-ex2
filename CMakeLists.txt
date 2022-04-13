@@ -10,7 +10,7 @@ add_executable(OS_ex2
 #        Demo/demo_itimer.c
         Thread.h
         uthreads.h
-        tests1/test5_no_out.cpp
+        test5_no_out.cpp
         PoolManager.h
         Starter.h
         uthreads.cpp
