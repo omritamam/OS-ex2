@@ -180,12 +180,12 @@ Thread *mainThread;
           return 0;
       }
       //CHECK IF IT IN THE READY LIST
-      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
-      if(it == readyQueue->end())
-      {
-          readyQueue->push_back(thread);
-          return 0;
-      }
+//      auto it = find(readyQueue->begin(), readyQueue->end(), thread);
+//      if(it == readyQueue->end())
+//      {
+//          readyQueue->push_back(thread);
+//          return 0;
+//      }
       return -1;
   }
 

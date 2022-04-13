@@ -59,9 +59,9 @@ class Starter {
     }
 
     static void mask_signals(){
-            if(sigprocmask(SIG_BLOCK, &sig_set, nullptr)){
-                fprintf(stderr, "system error: mask signals fail\n");
-            }
+        if(sigprocmask(SIG_BLOCK, &sig_set, nullptr)){
+            fprintf(stderr, "system error: mask signals fail\n");
+        }
     }
 
     static void unmask_signals(){
