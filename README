@@ -3,15 +3,21 @@ Shira Yarhi (318344637), Omri Tamam (315564112)
 EX: 2
 
 FILES:
-
-
+uthreads.cpp - static lib implementation
+README - this file
+Makefile -
 ANSWERS:
 
 Q1:
-
+many algorithms ca
 Q2:
 
+New process wont share common data with other processes, unlike threads. That's a good attribute for information security.
+In this way each tab get her own each of memory, and the CPU block the process to interact rawly with other process's data.
+In the google chrome example - we dont want one website to control data from another tab.
 Q3:
+any keyboard typing and screen change occurs
+
 
 Q4:
 
