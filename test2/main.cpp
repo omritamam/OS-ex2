@@ -142,7 +142,7 @@ int func_terminate_itself(){
  */
 int test_thread_block_itself(){
     flag = 0;
-    uthread_init(1);
+    uthread_init(1000);
     uthread_spawn(reinterpret_cast<thread_entry_point>(&func_block_itself));
     void* temp = malloc(1000);
     void* temp2 = malloc(1000);
