@@ -61,6 +61,8 @@ Thread *mainThread;
       mainThread->duplicate = 0;
       isUsed[0] = 1;
       mainThread->quantum = 1;
+      mainThread->waitingTime = -1;
+      mainThread->isSleep = false;
       sigemptyset (&(mainThread->env)->__saved_mask);
       allThreads[mainThread->id] =  mainThread;
       curRunning = mainThread;
@@ -83,6 +85,8 @@ Thread *mainThread;
     newTread->id = findId();
     isUsed[newTread->id] = 1;
     newTread->status = READY;
+    newTread->waitingTime = -1;
+    newTread->isSleep = false;
     address_t sp = (address_t) stack + STACK_SIZE - sizeof (address_t);
     address_t pc = (address_t) entry_point;
     sigsetjmp(newTread->env, 1);
@@ -119,7 +123,7 @@ Thread *mainThread;
     Thread *candidate = readyQueue->front();
     readyQueue->pop_front();
     candidate->duplicate--;
-    while ((candidate->status != READY) || (candidate->duplicate > 0))
+    while ((candidate->status != READY) || (candidate->duplicate > 1))
       {
         if (candidate->status == TERMINATED)
           {
@@ -224,14 +228,16 @@ Thread *mainThread;
   void updateWaitingTime(){
       for (auto & thread : allThreads)
       {
-          if(thread->isSleep){
-              thread->waitingTime--;
-          }
-          if(thread->waitingTime == 0){
-              thread->isSleep = false;
-              if(thread->status == READY){
-                  readyQueue->push_back(thread);
-                  thread->duplicate++;
+          if(thread != nullptr){
+              if(thread->isSleep){
+                  thread->waitingTime--;
+              }
+              if(thread->waitingTime == 0){
+                  thread->isSleep = false;
+                  if(thread->status == READY){
+                      readyQueue->push_back(thread);
+                      thread->duplicate++;
+                  }
               }
           }
       }
