@@ -164,7 +164,7 @@ class PoolManager {
   {
       Thread* thread = allThreads[tid];
       if(thread == nullptr){
-      return -1;
+        return -1;
     }
       readyQueue->erase(remove(readyQueue->begin(), readyQueue->end(), thread), readyQueue->end());
     allThreads[tid] = nullptr;
@@ -198,6 +198,7 @@ class PoolManager {
                       readyQueue->push_back(thread);
                       thread->duplicate++;
                   }
+                  thread->waitingTime = -1;
               }
           }
       }

@@ -52,6 +52,8 @@ int uthread_terminate (int tid)
     {
         return -1;
     }
+    Starter::unmask_signals();
+
 }
 
 int uthread_block(int tid)
@@ -77,7 +79,6 @@ int uthread_block(int tid)
 }
 
 
-// if already running - fails, else - pool.move(block, ready)
 int uthread_resume(int tid)
 {
     Starter::mask_signals();
@@ -92,11 +93,7 @@ int uthread_resume(int tid)
     return 0;
 };
 
-/**
- * @brief Returns the thread ID of the calling thread.
- *
- * @return The ID of the calling thread.
-*/
+
 int uthread_get_tid(){
     return pool->curRunning->id;
 }
@@ -153,7 +150,7 @@ int uthread_sleep(int num_quantums){
         return -1;
     }
     PoolManager::curRunning->isSleep = true;
-    PoolManager::curRunning->waitingTime = num_quantums + 1;
+    PoolManager::curRunning->waitingTime = num_quantums;
     PoolManager::curRunning->status = READY;
     starter->launchTimer();
     Starter::switchThread (MANUAL_SWITCH);

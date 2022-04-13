@@ -29,7 +29,6 @@ void Starter::switchThread(int sig) {
     PoolManager::curRunning->quantum++;
     //TODO error
     siglongjmp(nextThread->env, RETURN_FROM_STARTER);
-
 }
 
 
