@@ -31,9 +31,13 @@ father process. The "ps -A" activate a sys call to list all running processes. "
 (SIGTERM/SIGKILL), a OS kernel operation, to the process that now will be died and the OS will free it memory and remove
 it from the processes list.
 
-
-
 Q4:
+The real timer is a regular timer that measures the time of the process including interrupts and signals.
+The OS counter of the process is an example of a real timer.
+The Virtual timer is a timer whose time depends on the time that takes the CPU to do some job.
+that means that if you want to measure the time that takes the computer to do something, you should use the virtual timer
+that does not disturb by interrupts and signals.
+If we want to measure the time of the process we should use the virtual timer.
 
 Q5:
 The main goal of the sigsetjmp function is to save the environment of the running thread (and in particular the relevant
