@@ -5,18 +5,32 @@ EX: 2
 FILES:
 uthreads.cpp - static lib implementation
 README - this file
-Makefile -
+Makefile - regular make file - output is "libuthreads.a", no args needed
 ANSWERS:
 
 Q1:
-many algorithms ca
-Q2:
+many process contains separate parts that are independent and their process time is very long - such as services using
+web server/ remote DB which requires sometimes OS intervention. Web browser is a good example - each component come from
+another server - add server, photos server, app server..0 the time od processing the data is much smaller than the the
+waiting to receive it. We dont have to use process because the website is managed by single process with common data.
 
+Q2:
 New process wont share common data with other processes, unlike threads. That's a good attribute for information security.
-In this way each tab get her own each of memory, and the CPU block the process to interact rawly with other process's data.
-In the google chrome example - we dont want one website to control data from another tab.
+In this way each tab get her own block of memory, and the CPU blocks the process to interact rawly with other process's data.
+In the google chrome example - we dont want one website to access data from another tab.
+For example i dont want facebook.com know what are my bank account details when im browsing both websites.
+The main disadvantages are using a lot of memory and high overhead switching process instead of user-level threads.
+
 Q3:
-any keyboard typing and screen change occurs
+Any keyboard type sends an interrupt from keyboard hardware to the CPU, which handled by an interrupt vector function.
+Screen output is managed by OS as well, but using signals - the OS sends an signal to CPU which handled by rendering
+function from the vector function. So far we explained the typing procedure.
+A new process is born when the Shell process receive a program name + ENTER, the shell make a syscall for the program,
+the OS get he call, switch to kernel mode and allocate memory for a new process. the Shell will be registered as a
+father process. The "ps -A" activate a sys call to list all running processes. "kill <pid>" sends a OS kill signal
+(SIGTERM/SIGKILL), a OS kernel operation, to the process that now will be died and the OS will free it memory and remove
+it from the processes list.
+
 
 
 Q4:
